@@ -272,7 +272,7 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
           <div>
             <div class="eyebrow">Демо · бот записи</div>
             <h2>Проверьте бота от лица клиента</h2>
-            <p>Запишитесь в вымышленную студию, спросите цены своими словами и посмотрите, как приходит напоминание. Займёт одну минуту.</p>
+            <p>Пишите как живой клиент: «балаяж на длинные в субботу», «чем шатуш отличается от балаяжа?», «а парковка есть?». Бот поймёт, подберёт время и ответит на вопросы. Займёт минуту.</p>
           </div>
           <button class="btn primary open attn" id="open-demo" type="button" aria-expanded="false" aria-controls="demo-body">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12Z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>
@@ -523,24 +523,172 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
 </script>
 <script>
 (function(){
-  var log=document.getElementById('chat-log'),quick=document.getElementById('chat-quick'),
-      form=document.getElementById('chat-form'),inp=document.getElementById('chat-text'),
-      st=document.getElementById('chat-st');
+  function $(i){return document.getElementById(i)}
+  var log=$('chat-log'),quick=$('chat-quick'),form=$('chat-form'),inp=$('chat-text'),st=$('chat-st');
   if(!log)return;
-  var SERV={'Стрижка':'1 500','Маникюр с покрытием':'1 800','Окрашивание':'4 500'};
-  var MASTERS=['Анна','Мария','Любой свободный'];
-  var SLOTS=['11:00','14:30','18:00'];
-  var MAIN=['Записаться','Цены','Адрес и часы работы'];
+
+  /* ---------- data ---------- */
+  var M={anna:{n:'Анна',dat:'Анне',gen:'Анны',role:'стрижки, укладки, причёски'},
+         olga:{n:'Ольга',dat:'Ольге',gen:'Ольги',role:'колорист: все виды окрашивания и уход за волосами'},
+         maria:{n:'Мария',dat:'Марии',gen:'Марии',role:'маникюр, педикюр, наращивание ногтей'},
+         katya:{n:'Екатерина',dat:'Екатерине',gen:'Екатерины',role:'брови и ресницы'},
+         vika:{n:'Виктория',dat:'Виктории',gen:'Виктории',role:'косметолог, депиляция и макияж'}};
+  var CAT={hair:'Стрижки и укладки',color:'Окрашивание',care:'Уход за волосами',nails:'Маникюр и педикюр',brows:'Брови и ресницы',face:'Косметология и макияж',dep:'Депиляция'};
+  // len:true — цена зависит от длины волос (короткие ×1, средние ×1.3, длинные ×1.6)
+  var SV={
+    ends:{c:'hair',n:'Подравнивание кончиков',acc:'подравнивание кончиков',p:1200,d:'30 минут',m:['anna'],re:/подравн|кончик|освежить стрижк/},
+    bangs:{c:'hair',n:'Стрижка чёлки',acc:'стрижку чёлки',p:500,d:'15 минут',m:['anna'],re:/челк/},
+    beard:{c:'hair',n:'Стрижка бороды',acc:'стрижку бороды',p:900,d:'30 минут',m:['anna'],re:/бород|усы/},
+    kids:{c:'hair',n:'Детская стрижка',acc:'детскую стрижку',p:1200,d:'30 минут',m:['anna'],re:/(детск|ребен|ребенк|сын|доч|малыш)\S* ?\S* ?(стриж|подстри)|(стриж|подстри)\S* ?\S* ?(ребен|ребенк|сын|доч|малыш|детск)/},
+    mcut:{c:'hair',n:'Мужская стрижка',acc:'мужскую стрижку',p:1500,d:'40 минут',m:['anna'],re:/(муж|мужчин|парн|фейд|андеркат)\S* ?\S* ?(стриж|подстри)|(стриж|подстри)\S* ?\S* ?(муж|мужчин|парн)|фейд|андеркат/},
+    wcut:{c:'hair',n:'Женская стрижка',acc:'женскую стрижку',p:2000,d:'около часа',m:['anna'],len:true,re:/стриж|подстри|каре|боб |пикси|постри/},
+    evening:{c:'hair',n:'Вечерняя причёска',acc:'вечернюю причёску',p:3500,d:'1,5 часа',m:['anna'],re:/вечерн\S* причес|причес|свадеб|собранн/},
+    curls:{c:'hair',n:'Локоны',acc:'локоны',p:2000,d:'1 час',m:['anna'],len:true,re:/локон|кудр|голливуд/},
+    style:{c:'hair',n:'Укладка',acc:'укладку',p:1500,d:'40 минут',m:['anna'],len:true,re:/уклад|брашинг|выпрямить утюж/},
+    consult:{c:'color',n:'Консультация колориста',acc:'консультацию колориста',p:0,d:'15 минут',m:['olga'],re:/консульт|подобрать (цвет|оттен)|посовет/,info:'Колорист Ольга посмотрит волосы, подберёт технику и оттенок и назовёт точную цену. Это бесплатно и занимает 15 минут.'},
+    airtouch:{c:'color',n:'Airtouch',acc:'окрашивание Airtouch',p:10000,from:true,len:true,d:'4–5 часов',m:['olga'],re:/air ?touch|аиртач|эиртач|эйртач|эйр тач|аир тач/,info:'Airtouch — сложное окрашивание: тонкие пряди отбирают потоком воздуха от фена, поэтому переход от корней к светлым концам очень плавный и натуральный. Обновлять раз в 4–6 месяцев.'},
+    balayage:{c:'color',n:'Балаяж',acc:'балаяж',p:8000,from:true,len:true,d:'3–4 часа',m:['olga'],re:/балаяж|балояж|балаж/,info:'Балаяж — мягкие растяжки цвета, будто волосы выгорели на солнце. Корни остаются естественными, поэтому отрастание почти незаметно. Обновлять раз в 3–4 месяца.'},
+    shatush:{c:'color',n:'Шатуш',acc:'шатуш',p:7500,from:true,len:true,d:'около 3 часов',m:['olga'],re:/шатуш/,info:'Шатуш — эффект выгоревших прядей с растяжкой к концам. Пряди тоньше и хаотичнее, чем в балаяже, результат выглядит ещё естественнее. Держится 3–4 месяца.'},
+    ombre:{c:'color',n:'Омбре',acc:'омбре',p:7000,from:true,len:true,d:'около 3 часов',m:['olga'],re:/омбре|сомбре/,info:'Омбре — заметный переход от тёмных корней к светлым концам. Сомбре — то же, но мягче. Корни не красим, поэтому обновлять можно редко.'},
+    highlights:{c:'color',n:'Мелирование',acc:'мелирование',p:5000,from:true,len:true,d:'2,5 часа',m:['olga'],re:/мелир|пряд/,info:'Мелирование — осветление отдельных прядей по всей длине. Освежает цвет и визуально добавляет объём. Обновлять раз в 2–3 месяца.'},
+    blond:{c:'color',n:'Осветление (блонд)',acc:'осветление в блонд',p:7000,from:true,len:true,d:'около 3 часов',m:['olga'],re:/блонд|осветл|в блондин|платин|обесцв/,info:'Полное осветление с тонированием. Работаем с защитой волос (бондинг), из тёмного цвета иногда выходим в два этапа, чтобы сохранить качество волос.'},
+    wash:{c:'color',n:'Смывка цвета',acc:'смывку цвета',p:6000,from:true,len:true,d:'около 3 часов',m:['olga'],re:/смывк|вывести из (черн|темн)|выйти из (черн|темн)|неудачн\S* (цвет|окраш)/,info:'Смывка выводит из тёмного или неудачного цвета. Обычно нужно 1–2 визита, после — тонирование в нужный оттенок.'},
+    grey:{c:'color',n:'Закрашивание седины',acc:'закрашивание седины',p:3500,from:true,len:true,d:'около 2 часов',m:['olga','anna'],re:/седин|седые/,info:'Стойкое окрашивание, которое полностью перекрывает седину. Корни обычно подкрашивают раз в 4–6 недель.'},
+    tone:{c:'color',n:'Тонирование',acc:'тонирование',p:3000,from:true,len:true,d:'1,5 часа',m:['olga','anna'],re:/тонир|желтизн|желтый оттен/,info:'Тонирование — мягкая краска без аммиака: убирает желтизну, добавляет блеск и глубину цвета. Держится 4–6 недель.'},
+    roots:{c:'color',n:'Окрашивание корней',acc:'окрашивание корней',p:3000,from:true,d:'1,5 часа',m:['olga','anna'],re:/корн|отросш/,info:'Подкрашиваем только отросшие корни в ваш цвет. Обычно раз в 4–6 недель.'},
+    color1:{c:'color',n:'Однотонное окрашивание',acc:'однотонное окрашивание',p:4000,from:true,len:true,d:'около 2 часов',m:['olga','anna'],re:/однотон|в один тон|в один цвет|полностью покрас|в (рыж|черн|темн|каштан|шоколад|русый|медн)/,info:'Окрашивание всей длины в один цвет. Держится 6–8 недель, потом подкрашиваем корни.'},
+    keratin:{c:'care',n:'Кератиновое выпрямление',acc:'кератиновое выпрямление',p:6000,from:true,len:true,d:'около 3 часов',m:['olga'],re:/кератин|выпрямлен/,info:'Кератин разглаживает волосы и убирает пушистость на 3–5 месяцев.'},
+    botox:{c:'care',n:'Ботокс для волос',acc:'ботокс для волос',p:5000,from:true,len:true,d:'2,5 часа',m:['olga'],re:/ботокс|нанопласт/,info:'Восстанавливающая процедура: волосы становятся плотнее, гладкими и блестящими на 1–2 месяца.'},
+    hcare:{c:'care',n:'Уход для волос',acc:'уходовую процедуру для волос',p:2500,d:'1 час',m:['olga'],re:/уход\S* (для|за) волос|восстановлен\S* волос|маск\S* для волос|spa|спа для волос/},
+    ext:{c:'nails',n:'Наращивание ногтей',acc:'наращивание ногтей',p:3500,from:true,d:'2,5 часа',m:['maria'],re:/наращ\S* ногт|нарастить ногт|ногти нараст/},
+    fix:{c:'nails',n:'Коррекция наращенных ногтей',acc:'коррекцию ногтей',p:2800,d:'2 часа',m:['maria'],re:/коррекц\S* ногт|коррекц\S* нараш/},
+    mmani:{c:'nails',n:'Мужской маникюр',acc:'мужской маникюр',p:1300,d:'1 час',m:['maria'],re:/мужск\S* маник/},
+    manic:{c:'nails',n:'Маникюр без покрытия',acc:'маникюр без покрытия',p:1200,d:'1 час',m:['maria'],re:/маник\S* без покр|классическ\S* маник|гигиеническ/},
+    ped:{c:'nails',n:'Педикюр с покрытием',acc:'педикюр с покрытием',p:2600,d:'1,5 часа',m:['maria'],re:/педик/},
+    remove:{c:'nails',n:'Снятие покрытия',acc:'снятие покрытия',p:400,d:'20 минут',m:['maria'],re:/снят\S* (покр|гел|лак)|снять (покр|гел|лак)/},
+    mani:{c:'nails',n:'Маникюр с покрытием',acc:'маникюр с покрытием',p:2000,d:'1,5 часа',m:['maria'],re:/маник|ногт|гель|гел-лак|покрыти|шеллак|френч|дизайн ногт/,info:'Комбинированный маникюр с покрытием гель-лаком, держится 3–4 недели. Дизайн — от 100 ₽ за ноготь, френч +300 ₽.'},
+    lashvol:{c:'brows',n:'Наращивание ресниц 2D–3D',acc:'объёмное наращивание ресниц',p:3800,d:'2,5 часа',m:['katya'],re:/(2д|2d|3д|3d|объемн)\S* ?\S* ?ресниц|ресниц\S* ?\S* ?(2д|2d|3д|3d|объем)/},
+    lashext:{c:'brows',n:'Наращивание ресниц (классика)',acc:'наращивание ресниц',p:3000,d:'2 часа',m:['katya'],re:/наращ\S* ресниц|нарастить ресниц|ресниц\S* наращ/},
+    lashlam:{c:'brows',n:'Ламинирование ресниц',acc:'ламинирование ресниц',p:2500,d:'1 час',m:['katya'],re:/ламин\S* ресниц|ресниц\S* ламин|ресниц/},
+    browlam:{c:'brows',n:'Ламинирование бровей',acc:'ламинирование бровей',p:2200,d:'1 час',m:['katya'],re:/ламин\S* бров|бров\S* ламин/},
+    browtint:{c:'brows',n:'Коррекция и окрашивание бровей',acc:'коррекцию и окрашивание бровей',p:1300,d:'45 минут',m:['katya'],re:/(окраш|покрас|хна)\S* ?\S* ?бров|бров\S* ?\S* ?(окраш|покрас|хн)/},
+    brows:{c:'brows',n:'Коррекция бровей',acc:'коррекцию бровей',p:800,d:'30 минут',m:['katya'],re:/бров/},
+    clean:{c:'face',n:'Чистка лица',acc:'чистку лица',p:3500,d:'1,5 часа',m:['vika'],re:/чистк\S* лиц|чистк|акне|черн\S* точк/},
+    peel:{c:'face',n:'Пилинг лица',acc:'пилинг',p:3000,d:'1 час',m:['vika'],re:/пилинг/},
+    fmassage:{c:'face',n:'Массаж лица',acc:'массаж лица',p:2500,d:'45 минут',m:['vika'],re:/массаж\S* лиц|лиц\S* массаж|массаж/},
+    makeup:{c:'face',n:'Макияж',acc:'макияж',p:2500,from:true,d:'1 час',m:['vika'],re:/макияж|мейк|make ?up/,info:'Дневной макияж — 2 500 ₽, вечерний или на фотосессию — 3 500 ₽.'},
+    sugar:{c:'dep',n:'Шугаринг',acc:'шугаринг',p:800,from:true,d:'от 20 минут',m:['vika'],re:/шугар|сахарн/,info:'Цена зависит от зоны: подмышки — 800 ₽, голени — 1 500 ₽, ноги полностью — 2 500 ₽, глубокое бикини — 2 200 ₽.'},
+    wax:{c:'dep',n:'Восковая депиляция',acc:'восковую депиляцию',p:800,from:true,d:'от 20 минут',m:['vika'],re:/воск|депиляц|эпиляц|бикини|подмыш|удалить волос/,info:'Цена зависит от зоны: подмышки — 800 ₽, голени — 1 400 ₽, ноги полностью — 2 300 ₽, глубокое бикини — 2 000 ₽.'}
+  };
+  var ORDER=Object.keys(SV);
+  var COLORS=['color1','roots','tone','highlights','balayage','shatush','airtouch','blond','ombre','grey','wash'];
+  var LENK={1:'короткие',1.3:'средние',1.6:'длинные'};
+  var MAIN=['Записаться','Цены','Какое окрашивание выбрать?','Где вы находитесь?'];
   var END=['Хочу такого бота','Начать заново'];
   var WA='https://wa.me/79362364156?text='+encodeURIComponent('Здравствуйте! Попробовал демо-бота на сайте, хочу такого для своего бизнеса.');
-  var S={},gen=0;
+  var MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  var WD=['воскресенье','понедельник','вторник','среду','четверг','пятницу','субботу'];
+  var WDN=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  var HOURS=[10,11,12,13,14,15,16,17,18,19,20];
 
-  function days(){
-    var out=['Сегодня','Завтра'],d=new Date();d.setDate(d.getDate()+2);
-    var s=d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'});
-    out.push(s.charAt(0).toUpperCase()+s.slice(1));return out;
+  var S,gen=0;
+  function pick(a){return a[Math.floor(Math.random()*a.length)]}
+  function rub(n){return n.toLocaleString('ru-RU')+' ₽'}
+  function price(s,len){if(!s.p)return 'бесплатно';if(s.len&&len)return 'от '+rub(Math.round(s.p*len/100)*100)+' ('+LENK[len]+' волосы)';return (s.from?'от ':'')+rub(s.p)}
+  function priceFull(s){if(!s.p)return s.n+' — бесплатно';if(!s.len)return s.n+' — '+price(s);return s.n+': короткие волосы — от '+rub(s.p)+', средние — от '+rub(Math.round(s.p*1.3/100)*100)+', длинные — от '+rub(Math.round(s.p*1.6/100)*100)}
+  function catList(c){return CAT[c]+':\n'+ORDER.filter(function(k){return SV[k].c===c&&k!=='consult'}).map(function(k){return SV[k].n+' — '+price(SV[k])}).join('\n')}
+  function catOf(t){if(/окраш|покрас|краск|цвет/.test(t))return 'color';if(/маник|педик|ногт/.test(t))return 'nails';if(/бров|ресниц/.test(t))return 'brows';if(/косметолог|лиц/.test(t))return 'face';if(/стриж|уклад|причес/.test(t))return 'hair';if(/уход|восстанов/.test(t))return 'care';if(/депил|эпил/.test(t))return 'dep';return null}
+  function parseLen(t){if(/коротк|каре|пикси|до плеч /.test(t))return 1;if(/средн|ниже плеч|до лопат/.test(t))return 1.3;if(/длинн|ниже лопат|до пояс|очень длин/.test(t))return 1.6;return null}
+  function hh(h){return (h<10?'0':'')+h+':00'}
+
+  /* ---------- days & slots ---------- */
+  function dateOf(off){var d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+off);return d}
+  function dayName(off){
+    var d=dateOf(off),dm=d.getDate()+' '+MON[d.getMonth()];
+    if(off===0)return 'сегодня, '+dm; if(off===1)return 'завтра, '+dm;
+    return WD[d.getDay()]+', '+dm;
   }
-  function low(s){return s.charAt(0).toLowerCase()+s.slice(1)}
+  function dayNom(off){var d=dateOf(off),dm=d.getDate()+' '+MON[d.getMonth()];if(off===0)return 'Сегодня, '+dm;if(off===1)return 'Завтра, '+dm;var w=WDN[d.getDay()];return w.charAt(0).toUpperCase()+w.slice(1)+', '+dm}
+  function dayWhen(off){return off<=1?dayName(off):(dateOf(off).getDay()===2?'во ':'в ')+dayName(off)}
+  function dayChip(off){if(off===0)return 'Сегодня';if(off===1)return 'Завтра';var d=dateOf(off),w=WDN[d.getDay()];return w.charAt(0).toUpperCase()+w.slice(1)+', '+d.getDate()+' '+MON[d.getMonth()]}
+  function busy(off,mk,h){var x=(dateOf(off).getDate()*31+mk.length*17+h*7+(mk==='maria'?5:mk==='olga'?11:0))%10;return x<4}
+  function free(off,mk){
+    var now=new Date(),res=HOURS.filter(function(h){return !busy(off,mk,h)&&!(off===0&&h<=now.getHours())});
+    return res;
+  }
+  function freeAny(off,svk){
+    var out={};(SV[svk]?SV[svk].m:['anna','maria','olga']).forEach(function(mk){free(off,mk).forEach(function(h){if(!out[h])out[h]=mk})});
+    return out;
+  }
+  function slotsFor(off){
+    if(S.b.master&&S.b.master!=='any'){var o={};free(off,S.b.master).forEach(function(h){o[h]=S.b.master});return o}
+    return freeAny(off,S.b.svc);
+  }
+
+  /* ---------- parsing ---------- */
+  function norm(t){
+    t=t.toLowerCase().replace(/ё/g,'е').replace(/(\d{1,2})\.(\d{2})/g,function(m,a,b){return (+b<=12&&+a<=31)?a+'/'+b:a+':'+b});
+    return ' '+t.replace(/[!?.,;()"«»]/g,' ').replace(/\s+/g,' ')+' ';
+  }
+  function parseSvc(t){for(var k=0;k<ORDER.length;k++){if(SV[ORDER[k]].re.test(t))return ORDER[k]}return null}
+  function parseMaster(t){
+    if(/ ан(я|е|ю|и|ей|на|не|ну|ны|ной) /.test(t)||/ анн/.test(t))return 'anna';
+    if(/ мари(я|и|ю|ей) |маш(а|е|у|и|ей) /.test(t))return 'maria';
+    if(/ ольг|ол(я|е|ю) /.test(t))return 'olga';
+    if(/ екатер|кат(я|е|ю|и) /.test(t))return 'katya';
+    if(/ виктор|вик(а|е|у|и) /.test(t))return 'vika';
+    if(/любо|без разниц|все равно|неважн|кто свобод|кто угодно/.test(t))return 'any';
+    return null;
+  }
+  function parseDay(t){
+    if(/послезавтр/.test(t))return 2;
+    if(/завтр/.test(t))return 1;
+    if(/сегодн|сейчас|прямо сегодня/.test(t))return 0;
+    var stems=['воскрес','понед','вторн','сред','четв','пятн','суббот'],today=new Date().getDay();
+    for(var i=0;i<7;i++){if(new RegExp(' (в |во |на )?'+stems[i]).test(t)){var off=(i-today+7)%7;return off===0?7:off}}
+    if(/выходн/.test(t)&&!/без выходн/.test(t)){var o=(6-today+7)%7;return o}
+    var m=t.match(/ (\d{1,2})(\/)(\d{1,2}) /)||t.match(/ (\d{1,2})(-?го)? (январ|феврал|март|апрел|ма[яй]|июн|июл|август|сентябр|октябр|ноябр|декабр)/);
+    if(m){
+      var day=+m[1],mon;
+      if(m[3]&&/\d/.test(m[3]))mon=+m[3]-1;else{var ms=['январ','феврал','март','апрел','ма','июн','июл','август','сентябр','октябр','ноябр','декабр'];for(var k=0;k<12;k++)if(m[3]&&m[3].indexOf(ms[k])===0){mon=k;break}}
+      var now=dateOf(0),target=new Date(now.getFullYear(),mon,day,12);if(target<now)target.setFullYear(target.getFullYear()+1);
+      var diff=Math.round((target-now)/864e5);return diff>=0?diff:null;
+    }
+    return null;
+  }
+  function parseTime(t){
+    var r={},m=t.match(/(\d{1,2}):(\d{2})/);
+    if(m){r.h=+m[1]}
+    else{
+      var re=/ (в|к|на|около|после|с|до|часов в)? ?(\d{1,2})( ?час\w*| ?ч)?( утра| дня| вечера| вечером| ночи)?(?= )/g,mm;
+      while((mm=re.exec(t))){
+        var rest=t.slice(mm.index+mm[0].length);
+        if(/^ ?(руб|₽|минут|мин |лет|год|числ|январ|феврал|март|апрел|ма[яй]|июн|июл|август|сентябр|октябр|ноябр|декабр|-?го |\/)/.test(rest))continue;
+        if(!mm[1]&&!mm[3]&&!mm[4])continue;
+        if(mm[1]==='на'&&/^ ?(человек|персон|недел)/.test(rest))continue;
+        var h=+mm[2];
+        if((mm[4]&&/дня|вечер/.test(mm[4])&&h<12)||(!mm[4]&&h>=1&&h<=9))h+=12;
+        if(h>23)continue;
+        r.h=h;if(mm[1]==='после')r.after=true;if(mm[1]==='до')r.before=true;break;
+      }
+    }
+    if(r.h==null){
+      if(/ утр| с утра|пораньше|как можно раньше/.test(t))r.range=[10,12];
+      else if(/обед|днем|в середине дня/.test(t))r.range=[12,16];
+      else if(/вечер|после работы|попозже/.test(t))r.range=[17,20];
+    }
+    if(/ближайш|любое время|как можно скорее|побыстрее|когда угодно/.test(t))r.asap=true;
+    return (r.h!=null||r.range||r.asap)?r:null;
+  }
+  function parseName(raw,t,awaiting){
+    var m=raw.match(/(?:меня зовут|мое имя|моё имя|зовут|я\s*[-—]?|это)\s+([А-ЯЁA-Zа-яё][а-яёa-z]{1,20})/i);
+    if(m&&!/^(хочу|бы|не|на|к|записа|могу|можно)/i.test(m[1]))return cap(m[1]);
+    if(awaiting){var w=raw.trim().split(/\s+/);if(w.length<=3&&/^[А-ЯЁA-Za-zа-яё-]{2,20}$/.test(w[0]))return cap(w[0])}
+    return null;
+  }
+  function cap(s){return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase()}
+
+  /* ---------- ui ---------- */
   function now(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
   function scroll(){log.scrollTop=log.scrollHeight}
   function add(text,cls){
@@ -552,12 +700,15 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
     quick.innerHTML='';
     (list||[]).forEach(function(l){
       var b;
-      if(l==='Хочу такого бота'){b=document.createElement('a');b.href=WA;b.target='_blank';b.rel='noopener';b.textContent='Хочу такого бота';}
-      else{b=document.createElement('button');b.type='button';b.textContent=l;b.addEventListener('click',function(){user(l)});}
+      if(l==='Хочу такого бота'){b=document.createElement('a');b.href=WA;b.target='_blank';b.rel='noopener';b.textContent=l}
+      else{b=document.createElement('button');b.type='button';b.textContent=l;b.addEventListener('click',function(){user(l)})}
       quick.appendChild(b);
     });
   }
-  function say(lines,ch){
+  var out=[],outChips=null;
+  function say(t,cls){out.push(cls?{t:t,cls:cls}:t)}
+  function flush(){
+    var lines=out,ch=outChips;out=[];outChips=null;
     var g=gen,i=0;chips([]);
     (function step(){
       if(g!==gen)return;
@@ -566,97 +717,234 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
       var ty=document.createElement('div');ty.className='typing';ty.innerHTML='<i></i><i></i><i></i>';
       log.appendChild(ty);scroll();st.textContent='печатает…';
       setTimeout(function(){
-        if(g!==gen)return;
-        ty.remove();st.textContent='онлайн';add(o.t,o.cls||'bot');
-        setTimeout(step,o.wait||250);
-      },Math.min(1400,450+o.t.length*10));
+        if(g!==gen)return;ty.remove();st.textContent='онлайн';add(o.t,o.cls||'bot');setTimeout(step,o.wait||250);
+      },Math.min(1500,500+o.t.length*9));
     })();
   }
 
-  function start(){S={step:'idle'};say(['Здравствуйте! Я бот-администратор студии «Лаванда».','Помогу записаться, подскажу цены и адрес. Нажмите кнопку или напишите своими словами.'],MAIN)}
-  function book(){S.step='service';say(['С удовольствием запишу вас. Какая услуга интересует?'],Object.keys(SERV))}
-  function pickService(s){S.service=s;S.step='master';say(['Отлично, '+low(s)+'. К какому мастеру записать?'],MASTERS)}
-  function pickMaster(m){S.master=m;S.step='day';say(['Хорошо. На какой день?'],days())}
-  function pickDay(d){S.day=d;S.step='time';say(['На '+low(d)+' свободно такое время:'],SLOTS)}
-  function masterText(){return S.master==='Любой свободный'?'любой свободный мастер':'мастер '+S.master}
-  function pickTime(t){
-    S.time=t;
-    if(S.moving){S.moving=false;S.step='booked';
-      say(['Готово, перенёс запись на '+low(S.day)+', '+t+'. Напомню накануне.',{t:'Конец демо. Так бот работает с каждым клиентом круглосуточно.',cls:'note'}],END);return}
-    S.step='name';say(['Записываю на '+t+'. Как к вам обращаться?'],[]);
-    setTimeout(function(){try{inp.focus({preventScroll:true})}catch(e){}},1200);
-  }
-  function setName(n){
-    S.name=n.slice(0,40);S.step='remind';
-    say(['Спасибо, '+S.name+'! Вы записаны:\n'+S.service+', '+masterText()+'\n'+S.day+', '+S.time+'\nСтоимость: от '+SERV[S.service]+' ₽',
-         'Накануне пришлю напоминание. Если планы поменяются, просто напишите, и я перенесу запись.',
-         {t:'Так выглядит напоминание за сутки до визита:',cls:'note',wait:900},
-         {t:'Напоминание: '+low(S.day==='Сегодня'?'сегодня':'завтра')+' в '+S.time+' вас ждёт '+low(S.service)+' в студии «Лаванда». Подтвердите, пожалуйста, визит.',cls:'bot remind'}],
-        ['Подтверждаю','Перенести','Отменить']);
-  }
-  function confirmVisit(){S.step='booked';say(['Отлично, ждём вас! Если будете опаздывать, напишите, я предупрежу мастера.',{t:'Конец демо. Так бот работает с каждым клиентом круглосуточно.',cls:'note'}],END)}
-  function move(){S.moving=true;S.step='day';say(['Без проблем. На какой день перенести?'],days())}
-  function cancel(){S.step='idle';S.time=null;say(['Запись отменена. Освободившееся время я уже предложил клиентам из листа ожидания.','Будем рады видеть вас снова!',{t:'Конец демо. Так бот работает с каждым клиентом круглосуточно.',cls:'note'}],END)}
-  function prices(){say(['Наши цены:\nСтрижка — от 1 500 ₽\nМаникюр с покрытием — от 1 800 ₽\nОкрашивание — от 4 500 ₽','Записать вас?'],['Записаться','Адрес и часы работы'])}
-  function address(){say(['Мы на ул. Примерной, 1, вход со двора. Работаем каждый день с 10:00 до 21:00.','Записать вас на удобное время?'],['Записаться','Цены'])}
-  function reset(){gen++;log.innerHTML='';quick.innerHTML='';st.textContent='онлайн';start()}
+  /* ---------- booking ---------- */
+  function svcChips(c){if(c)return ORDER.filter(function(k){return SV[k].c===c}).slice(0,8).map(function(k){return SV[k].n});return Object.keys(CAT).map(function(k){return CAT[k]})}
+  function listTimes(o,limit){var hs=Object.keys(o).map(Number).sort(function(a,b){return a-b});if(limit&&hs.length>limit){var step=hs.length/limit,r=[];for(var i=0;i<limit;i++)r.push(hs[Math.floor(i*step)]);hs=r}return hs}
+  function firstFree(fromOff){for(var off=fromOff||0;off<14;off++){var o=slotsFor(off),hs=listTimes(o);if(hs.length)return {off:off,h:hs[0],mk:o[hs[0]]}}return null}
 
-  function user(text){
-    text=String(text).trim();if(!text)return;
-    add(text,'me');chips([]);
-    var t=text.toLowerCase();
-    if(text==='Начать заново')return reset();
-    if(text==='Записаться')return book();
-    if(text==='Цены')return prices();
-    if(text==='Адрес и часы работы')return address();
-    if(text==='Подтверждаю')return confirmVisit();
-    if(text==='Перенести')return move();
-    if(text==='Отменить')return cancel();
-    if(S.step==='service'){
-      if(SERV[text])return pickService(text);
-      if(/стриж/.test(t))return pickService('Стрижка');
-      if(/маник|ногт/.test(t))return pickService('Маникюр с покрытием');
-      if(/окраш|цвет|покрас/.test(t))return pickService('Окрашивание');
+  function resolveTime(req){
+    var b=S.b,o=slotsFor(b.day),hs=listTimes(o);
+    if(!hs.length){
+      var fit=function(h){if(req.range)return h>=req.range[0]&&h<=req.range[1];if(req.after)return h>=req.h;if(req.before)return h<req.h;if(req.h!=null)return h===req.h;return true};
+      var nf=null;for(var off=b.day+1;off<14&&!nf;off++){var oo=slotsFor(off),cand=listTimes(oo).filter(fit);if(cand.length)nf={off:off,h:cand[0],mk:oo[cand[0]]}}
+      if(!nf)nf=firstFree(b.day+1);
+      var closed=b.day===0&&new Date().getHours()>=19;
+      say((closed?'Сегодня мы уже не успеем, студия скоро закрывается.':'На '+dayName(b.day)+' всё занято, к сожалению.')+(nf?' Ближайшее подходящее время — '+dayWhen(nf.off)+' в '+hh(nf.h)+'. Записать?':''));
+      if(nf){S.offer={day:nf.off,h:nf.h,mk:nf.mk};outChips=['Да, записать','Другой день'];}else outChips=['Другой день'];return false}
+    if(req.asap){b.time=hs[0];b.mk=o[hs[0]];return true}
+    if(req.h!=null){
+      if(req.after){var a=hs.filter(function(h){return h>=req.h});if(a.length){offerTimes(a.slice(0,4),'После '+hh(req.h)+' свободно:');return false}}
+      if(req.before){var bb=hs.filter(function(h){return h<req.h});if(bb.length){offerTimes(bb.slice(-4),'До '+hh(req.h)+' свободно:');return false}}
+      if(o[req.h]){b.time=req.h;b.mk=o[req.h];return true}
+      if(req.h<10||req.h>20){say(pick(['Мы работаем с 10:00 до 21:00, последняя запись на 20:00.','В это время мы закрыты: работаем с 10 до 21.']));offerTimes(listTimes(o,4),'Могу предложить:');return false}
+      var near=hs.slice().sort(function(x,y){return Math.abs(x-req.h)-Math.abs(y-req.h)}).slice(0,2).sort(function(x,y){return x-y});
+      var who=b.master&&b.master!=='any'?' у '+M[b.master].gen:'';
+      offerTimes(near,'В '+hh(req.h)+who+' уже занято. Рядом свободно '+near.map(hh).join(' и ')+'. Какое удобнее?',true);return false;
     }
-    if(S.step==='master'){
-      if(MASTERS.indexOf(text)>=0)return pickMaster(text);
-      if(/ан/.test(t))return pickMaster('Анна');
-      if(/мар/.test(t))return pickMaster('Мария');
-      if(/люб|все равно|всё равно|неваж/.test(t))return pickMaster('Любой свободный');
+    if(req.range){var r=hs.filter(function(h){return h>=req.range[0]&&h<=req.range[1]});
+      if(r.length){offerTimes(r.slice(0,4),pick(['Есть такие окна:','Свободно:']));return false}
+      say('В это время уже всё занято.');offerTimes(listTimes(o,4),'Зато есть:');return false}
+    return false;
+  }
+  function offerTimes(hs,text,inline){say(inline?text:text+' '+hs.map(hh).join(', ')+'.');outChips=hs.map(hh);S.await='time';S.offered=hs}
+
+  function next(){
+    var b=S.b;
+    if(!b.svc){S.await='svc';
+      if(b.cat==='color'){say('Какое окрашивание интересует? Если не уверены, Ольга бесплатно проконсультирует и подберёт технику.');outChips=COLORS.slice(0,7).map(function(k){return SV[k].n}).concat(['Консультация колориста'])}
+      else if(b.cat){say(pick(['Что именно из раздела «'+CAT[b.cat]+'»?','Уточните, пожалуйста, услугу:']));outChips=svcChips(b.cat)}
+      else{say(pick(['На какую услугу вас записать?','Подскажите, какая услуга интересует?']));outChips=svcChips()}
+      return}
+    var sv=SV[b.svc];
+    if(b.master&&b.master!=='any'&&sv.m.indexOf(b.master)<0){
+      var right=sv.m[0];say(M[b.master].n+' делает '+M[b.master].role+', а '+sv.acc+' у нас делает '+M[right].n+'. Записать к '+M[right].dat+'?');
+      b.master=null;S.offerMaster=right;outChips=['Да, к '+M[right].dat,'Любой мастер'];S.await='master';return}
+    if(!b.master){if(sv.m.length===1){b.master=sv.m[0]}else{S.await='master';say('К какому мастеру? '+sv.m.map(function(k){return M[k].n+' ('+M[k].role+')'}).join(', ')+'.');outChips=sv.m.map(function(k){return M[k].n}).concat(['Любой мастер']);return}}
+    if(b.day==null){S.await='day';say(pick(['На какой день вам удобно?','Когда хотите прийти?']));outChips=['Сегодня','Завтра',dayChip(2),'Ближайшее свободное'];return}
+    if(b.day>13){say('Запись открыта на две недели вперёд. Выберите, пожалуйста, день поближе.');b.day=null;outChips=['Сегодня','Завтра',dayChip(2)];S.await='day';return}
+    if(b.time==null){
+      if(S.req){var req=S.req;S.req=null;if(!resolveTime(req))return;}
+      else{var o=slotsFor(b.day),hs=listTimes(o,4);
+        if(!hs.length){resolveTime({});return}
+        offerTimes(hs,'На '+dayName(b.day)+' свободно:');return}
     }
-    if(S.step==='day'){
-      var ds=days();if(ds.indexOf(text)>=0)return pickDay(text);
-      if(/сегодн/.test(t))return pickDay('Сегодня');
-      if(/завтр/.test(t))return pickDay('Завтра');
-      if(/послезавтр/.test(t))return pickDay(ds[2]);
+    if(!S.name){S.await='name';say(pick(['Отлично, '+hh(b.time)+' свободно. Как к вам обращаться?','Время '+hh(b.time)+' держу за вами. Подскажите, как вас зовут?']));return}
+    S.await='confirm';
+    var mk=b.master==='any'?b.mk:b.master;b.mk=mk;
+    say(S.name+', проверьте, пожалуйста:\n'+sv.n+' — '+price(sv,b.len)+(sv.len&&!b.len?' (точную цену мастер назовёт по длине волос)':'')+'\nМастер: '+M[mk].n+'\n'+dayNom(b.day)+', '+hh(b.time)+'\nДлительность: '+sv.d);
+    outChips=['Всё верно','Изменить время','Отменить'];
+  }
+  function book(){
+    var b=S.b,sv=SV[b.svc];S.booked=true;S.await='remind';
+    say(pick(['Готово, вы записаны! ','Записала вас! '])+'Ждём вас '+dayWhen(b.day)+' в '+hh(b.time)+', ул. Примерная, 1. На первый визит у нас скидка 10%.');
+    say('Накануне пришлю напоминание. Если планы поменяются, просто напишите.');
+    say('Так выглядит напоминание за сутки до визита:','note');
+    say('Напоминание: '+(b.day===0?'сегодня':'завтра')+' в '+hh(b.time)+' вас ждёт '+M[b.mk].n+', '+sv.n.toLowerCase()+'. Подтвердите, пожалуйста, визит.','bot remind');
+    outChips=['Подтверждаю','Перенести','Отменить запись'];
+  }
+  function endNote(){say('Конец демо. Так бот работает с каждым клиентом круглосуточно. Можете задать ещё вопрос или начать заново.','note');outChips=END}
+
+  /* ---------- faq ---------- */
+  function priceList(){return 'Наши цены:\n'+Object.keys(SV).map(function(k){return SV[k].n+' — '+price(SV[k])}).join('\n')}
+  var FAQ=[
+    {k:'bot',re:/ты (бот|робот|человек|ии|живой|нейросет)|с кем я (говорю|общаюсь)|это бот/,a:function(){return 'Я ИИ-ассистент студии красоты «Лаванда»: записываю, отвечаю на вопросы и напоминаю о визитах. Если нужно, подключу живого администратора.'}},
+    {k:'human',re:/оператор|живого|живой человек|администратор|менеджер|позвон|перезвон|соедини/,a:function(){return 'Конечно, передаю ваш вопрос администратору, он ответит в течение 10 минут. В настоящем боте здесь подключается живой сотрудник.'}},
+    {k:'complaint',re:/плох|ужасн|недовол|жалоб|испортил|криво|обман|верните деньги/,a:function(){return 'Очень жаль, что так вышло. Передаю ваше сообщение управляющей, она свяжется с вами сегодня и всё решит.'}},
+    {k:'info',re:/что такое|отличает|отличия|отличие|отличаются|разниц|что это за|как (это )?(выглядит|делает)|расскажи(те)? (про|о|подробн)|что входит|в чем суть/,a:function(t){var ks=ORDER.filter(function(k){return SV[k].re.test(t)&&SV[k].info});if(ks.length>=2)return ks.slice(0,3).map(function(k){return SV[k].info}).join('\n\n');var k=parseSvc(t)||S.b.svc;return k&&SV[k].info?SV[k].info:'Расскажу подробно о любой услуге. Какая интересует?'}},
+    {k:'harm',re:/вред|испорт|сожж|поврежд|выпаду|ломк|не испортит|безопасно ли/,a:function(){return 'Работаем на профессиональных красителях с защитой волос (бондинг), поэтому даже осветление проходит бережно. Перед сложным окрашиванием мастер оценит состояние волос и, если нужно, предложит уход.'}},
+    {k:'last',re:/держится|на сколько хватает|как часто (обновл|подкраш|делать|приход)|когда (обновл|подкраш)|надолго ли/,a:function(t){var k=parseSvc(t)||S.b.svc;return k&&SV[k].info?SV[k].info:'Однотонное окрашивание держится 6–8 недель, тонирование 4–6 недель, балаяж и шатуш 3–4 месяца, маникюр с покрытием 3–4 недели.'}},
+    {k:'choose',re:/какое окрашивание выбрать|что (мне )?(выбрать|лучше|подойдет|посоветуете)|не знаю какое|какой цвет|какой оттенок|подберите/,a:function(){return 'Коротко о техниках:\nТонирование — освежить цвет и убрать желтизну\nОкрашивание корней — если цвет уже нравится\nМелирование — светлые пряди по всей длине\nБалаяж и шатуш — эффект выгоревших волос, корни натуральные\nAirtouch — самый плавный переход, премиум\nБлонд — полное осветление\nЕсли сомневаетесь, лучше всего бесплатная консультация колориста Ольги: 15 минут, подберёт технику под ваши волосы.'}},
+    {k:'price',re:/цен|стоим|сколько сто|прайс|почем|по деньгам|сколько будет|сколько за|руб/,a:function(t){var k=parseSvc(t),len=parseLen(t)||S.b.len;if(k){var sv=SV[k];if(sv.len&&!len)return priceFull(sv)+'.\nТочную цену мастер назовёт на месте: она зависит от густоты и исходного цвета.'+(sv.info&&sv.c==='color'?'':'');return sv.n+' — '+price(sv,len)+', по времени '+sv.d+'.'+(sv.info&&/депил|шугар|макияж|маник/.test(sv.n.toLowerCase())?'\n'+sv.info:'')}var c=catOf(t);if(c)return catList(c);return 'Ориентир по ценам:\nСтрижки — от 1 200 ₽\nОкрашивание — от 3 000 ₽\nМаникюр с покрытием — 2 000 ₽\nПедикюр — 2 600 ₽\nБрови и ресницы — от 800 ₽\nКосметология — от 2 500 ₽\nДепиляция — от 800 ₽\nВыберите раздел, покажу подробно.'}},
+    {k:'dur',re:/сколько (длит|по времени|займет|занимает|времени)|долго ли|как долго/,a:function(t){var k=parseSvc(t)||S.b.svc;return k?SV[k].n+' занимает '+SV[k].d+'.':'Стрижка — около часа, маникюр и педикюр — 1,5 часа, окрашивание — от 1,5 до 5 часов в зависимости от техники.'}},
+    {k:'addr',re:/адрес|где (вы|наход|это)|как (до вас|добрат|пройти|найти|доехать)|метро|ехать/,a:function(){return 'Мы на ул. Примерной, 1, 3 минуты пешком от метро. Вход со двора, вывеска «Лаванда».'}},
+    {k:'hours',re:/до скольк|во сколько (открыв|закрыв|работ)|часы работ|график|режим работ|работаете|открыт|выходн(ой|ые) (день|дни)|без выходн|в воскресенье работ/,a:function(){return 'Работаем каждый день с 10:00 до 21:00, без выходных.'}},
+    {k:'park',re:/парков|припарк|машин/,a:function(){return 'Да, во дворе есть бесплатная парковка для клиентов.'}},
+    {k:'pay',re:/оплат|картой|карта|налич|сбп|перевод|qr/,a:function(){return 'Оплатить можно картой, наличными или по СБП. Оплата после услуги.'}},
+    {k:'sale',re:/скидк|акци|дешевл|промокод|бонус|впервые|первый раз|день рожд/,a:function(){return 'На первый визит скидка 10%. Именинникам −15% за неделю до и после дня рождения.'}},
+    {k:'gift',re:/сертификат|подар/,a:function(){return 'Есть подарочные сертификаты от 2 000 ₽, действуют полгода. Можно купить в студии или онлайн.'}},
+    {k:'kids',re:/с какого возраст|детей стриж|стрижете дет|можно с ребенк/,a:function(){return 'Стрижём детей с 3 лет, детская стрижка — 1 200 ₽. Мультики во время стрижки прилагаются.'}},
+    {k:'late',re:/опозда|задерж|не успева/,a:function(){return 'Ничего страшного, ждём до 15 минут. Если опаздываете сильнее, напишите, я постараюсь сдвинуть запись.'}},
+    {k:'clean',re:/стерил|гигиен|инструмент|безопасн|чисто/,a:function(){return 'Инструменты проходят стерилизацию в сухожаре, пилки и бафы одноразовые. Крафт-пакет вскрывается при вас.'}},
+    {k:'masters',re:/какие мастер|кто (у вас )?(работает|стрижет|делает|красит)|про мастер|опыт мастер|мастера хорош/,a:function(){return 'Наши мастера:\n'+Object.keys(M).map(function(k){return M[k].n+' — '+M[k].role}).join('\n')+'\nУ каждого опыт больше 5 лет.'}},
+    {k:'mat',re:/материал|бренд|какие лаки|какой краск|чем (крас|покрыва)|гипоаллерг|аллерги/,a:function(){return 'Работаем на профессиональных материалах. Если есть аллергия, скажите мастеру заранее, подберём гипоаллергенные средства.'}},
+    {k:'thanks',re:/спасиб|благодар|супер|отлично спасибо/,a:function(){return pick(['Пожалуйста! Обращайтесь в любое время.','Рада помочь! Хорошего дня.'])}},
+    {k:'bye',re:/до свидан|пока |всего доброго/,a:function(){return 'Всего доброго! Будем рады вас видеть.'}}
+  ];
+
+  /* ---------- main handler ---------- */
+  function start(){
+    S={b:{},await:null,name:null,booked:false};
+    say('Здравствуйте! Я ИИ-ассистент студии красоты «Лаванда».');
+    say('Запишу на любую услугу, подскажу цены и помогу выбрать окрашивание. Пишите как удобно, например: «балаяж на длинные волосы в субботу».');
+    outChips=MAIN;flush();
+  }
+  function reset(){gen++;log.innerHTML='';quick.innerHTML='';st.textContent='онлайн';out=[];start()}
+
+  function user(raw){
+    raw=String(raw).trim();if(!raw)return;
+    add(raw,'me');chips([]);
+    handle(raw);flush();
+  }
+  function resume(){
+    if(S.booked&&S.await==='remind'){outChips=['Подтверждаю','Перенести','Отменить запись'];return}
+    if(S.booked){outChips=END;return}
+    if(S.await==='time'&&S.offered&&S.offered.length){say(pick(['Так какое время вам удобнее: ','Возвращаюсь к записи: свободно '])+S.offered.map(hh).join(', ')+'.');outChips=S.offered.map(hh);return}
+    if(S.offer){say('Записать вас '+dayWhen(S.offer.day)+' в '+hh(S.offer.h)+'?');outChips=['Да, записать','Другой день'];return}
+    if(S.await==='svc'){next();return}
+    if(S.await){say(pick(['Вернёмся к записи.','Продолжим запись.']));next()}
+    else{outChips=MAIN}
+  }
+  function handle(raw){
+    var t=norm(raw),b=S.b;
+
+    // buttons & yes/no
+    if(raw==='Начать заново'){reset();out=[];return}
+    if(raw==='Записаться'){S.booked=false;S.b={};next();return}
+    if(raw==='Цены'){say(FAQ.filter(function(f){return f.k==='price'})[0].a(' '));S.pricecat=true;outChips=svcChips();return}
+    if(raw==='Какое окрашивание выбрать?'){say(FAQ.filter(function(f){return f.k==='choose'})[0].a());S.b={cat:'color'};S.await='svc';outChips=COLORS.slice(0,7).map(function(k){return SV[k].n}).concat(['Консультация колориста']);return}
+    var ck=Object.keys(CAT).filter(function(k){return CAT[k]===raw})[0];
+    if(ck){if(S.pricecat&&!S.await){S.pricecat=false;say(catList(ck));say('Записать вас?');S.yes='book';S.b={cat:ck};outChips=['Да, записаться'].concat(svcChips(ck).slice(0,4));return}
+      b.cat=ck;b.svc=null;next();return}
+    if(raw==='Где вы находитесь?'){say(FAQ.filter(function(f){return f.k==='addr'})[0].a());S.yes='book';say('Записать вас на удобное время?');outChips=['Да, записаться','Цены'];return}
+    if(raw==='Свободное время сегодня'){var any=freeAny(0,b.svc),hs=listTimes(any,5);
+      say(hs.length?'Сегодня есть свободные окна: '+hs.map(hh).join(', ')+'. На какую услугу записать?':'Сегодня всё занято. Завтра есть время: '+listTimes(freeAny(1,b.svc),4).map(hh).join(', ')+'.');
+      S.b.day=hs.length?0:1;S.await='svc';outChips=svcChips();return}
+    if(raw==='Ближайшее свободное'){if(!b.master)b.master='any';var nf=firstFree(0);if(!nf){say('Свободных окон на две недели нет, передам администратору.');return}b.day=nf.off;b.time=nf.h;b.mk=nf.mk;say('Ближайшее свободное — '+dayWhen(nf.off)+' в '+hh(nf.h)+'.');next();return}
+    if(raw==='Любой мастер'){b.master='any';next();return}
+    if(/^Да, к /.test(raw)&&S.offerMaster){b.master=S.offerMaster;S.offerMaster=null;next();return}
+    if(raw==='Другой день'){b.day=null;b.time=null;next();return}
+    if(raw==='Хочу такого бота')return;
+
+    var yes=/^ ?(да|ага|угу|давай|давайте|хорошо|ок|окей|конечно|го|можно|записывай|записывайте|подходит|устраивает|верно|все верно|да записать|да записаться|отлично|супер) ?$/.test(t)||/^Да, /.test(raw)||raw==='Всё верно'||raw==='Подтверждаю';
+    var no=/^ ?(нет|не надо|не нужно|неа|не хочу|потом) ?$/.test(t);
+
+    // reminder answers
+    if(S.booked){
+      if(raw==='Подтверждаю'||(S.await==='remind'&&yes)){S.await=null;say(pick(['Отлично, ждём вас!','Спасибо, ждём!'])+' Если будете опаздывать, напишите, я предупрежу мастера.');endNote();return}
+      if(raw==='Перенести'||/перен|друг(ое|ой) (время|день)|поменять|не смогу|не успею/.test(t)){S.booked=false;S.moving=true;b.day=null;b.time=null;var nd=parseDay(t),nt=parseTime(t);if(nd!=null)b.day=nd;if(nt)S.req=nt;say('Без проблем, перенесём.');next();return}
+      if(raw==='Отменить запись'||/отмен|не прид/.test(t)){S.booked=false;S.await=null;S.b={};say('Запись отменена. Освободившееся время я уже предложила клиентам из листа ожидания.');say('Будем рады видеть вас в другой раз!');endNote();return}
+      if(/(во сколько|когда|куда) я записан|моя запись|напомни/.test(t)){say('Вы записаны на '+SV[b.svc].acc+' к '+M[b.mk].dat+': '+dayWhen(b.day)+' в '+hh(b.time)+'.');resume();return}
     }
-    if(S.step==='time'){
-      if(SLOTS.indexOf(text)>=0)return pickTime(text);
-      var m=t.match(/(\d{1,2})[:.\s]?(\d{2})?/);
-      if(m){var h=+m[1];var best=SLOTS.reduce(function(a,b){return Math.abs(parseInt(b)-h)<Math.abs(parseInt(a)-h)?b:a});
-        if(SLOTS.indexOf(text)<0&&parseInt(best)!==h){say(['На это время, к сожалению, всё занято. Ближайшее свободное — '+best+'. Подойдёт?'],SLOTS);return}
-        return pickTime(best)}
+
+    // pending offers
+    if(S.offer&&yes){b.day=S.offer.day;b.time=S.offer.h;b.mk=S.offer.mk;S.offer=null;next();return}
+    if(S.offerMaster&&yes){b.master=S.offerMaster;S.offerMaster=null;next();return}
+    if(S.await==='confirm'){
+      if(yes){book();return}
+      if(raw==='Изменить время'||/измени|друг(ое|ой)|не то/.test(t)){b.time=null;var d2=parseDay(t);if(d2!=null)b.day=d2;else b.day=null;var t2=parseTime(t);if(t2)S.req=t2;next();return}
+      if(raw==='Отменить'||no||/отмен/.test(t)){S.b={};S.await=null;say('Хорошо, не записываю. Если передумаете, просто напишите.');outChips=MAIN;return}
     }
-    if(S.step==='name'&&!/цен|стоим|адрес|где/.test(t))return setName(text);
-    if(/цен|стоим|сколько|прайс|почём|почем/.test(t))return prices();
-    if(/адрес|где|наход|добрат|часы|работа[ею]т|открыт|до скольк/.test(t))return address();
-    if(/перен/.test(t)&&S.time)return move();
-    if(/отмен/.test(t)&&S.time)return cancel();
-    if(/запис|хочу|можно|свобод|окошк/.test(t))return book();
-    if(/привет|здравств|добр(ый|ое|ого)/.test(t))return say(['Здравствуйте! Чем могу помочь?'],MAIN);
-    if(/спасиб|благодар/.test(t))return say(['Пожалуйста! Обращайтесь в любое время.'],MAIN);
-    say(['Хороший вопрос. Передам его администратору, он ответит в течение 10 минут.','А пока могу записать вас или подсказать цены.'],MAIN);
+    if(S.yes==='book'&&yes){S.yes=null;S.b={svc:S.b.svc,cat:S.b.cat,len:S.b.len};S.booked=false;next();return}
+    if(no&&!S.await){say('Хорошо. Если появятся вопросы, пишите в любое время.');outChips=MAIN;return}
+    S.yes=null;
+    if(S.await==='time'&&yes&&S.offered&&S.offered.length){S.req={h:S.offered[0]};next();return}
+
+    // entities
+    var sv=parseSvc(t),mk=parseMaster(t),dy=parseDay(t),tm=parseTime(t);
+    var bookingIntent=/запис|хочу|сделать|можно (ли )?(прийти|к вам)|нужн[аоы]? (на|стриж|маник)|надо|забронир|свобод|окошк|окно|есть мест|когда можно|ближайш/.test(t);
+
+    // name
+    if(S.await==='name'){
+      var faqHit=FAQ.some(function(f){return f.re.test(t)});
+      var nm=parseName(raw,t,!faqHit&&!sv&&dy==null&&!tm);
+      if(nm){S.name=nm;next();return}
+    } else {var nm2=parseName(raw,t,false);if(nm2&&/зовут|имя/.test(t))S.name=nm2;}
+
+    // faq answers (can be several)
+    var hits=FAQ.filter(function(f){return f.re.test(t)});
+    var bookingish=bookingIntent||dy!=null||!!tm;
+    if(hits.length&&!(sv&&bookingIntent&&hits.every(function(h){return h.k==='price'||h.k==='dur'}))){
+      hits.slice(0,3).forEach(function(f){say(f.a(t))});
+      if(!bookingish){
+        var onlyChat=hits.every(function(h){return /thanks|bye|bot|human|complaint/.test(h.k)});
+        if(sv&&!S.await&&!S.booked){S.b={svc:sv,len:parseLen(t)||S.b.len};say(pick(['Записать вас на '+SV[sv].acc+'?','Подобрать время на '+SV[sv].acc+'?']));S.yes='book';outChips=['Да, записаться','Цены'];return}
+        if(S.await||S.booked||S.offer)resume();
+        else if(onlyChat)outChips=MAIN;
+        else{say(pick(['Записать вас?','Хотите, подберу удобное время?']));S.yes='book';outChips=['Да, записаться','Цены']}
+        return;
+      }
+    }
+    // a name typed while choosing day/time
+    if(!hits.length&&!sv&&dy==null&&!tm&&!mk&&(S.await==='time'||S.await==='day'||S.offer)&&/^[А-ЯЁ][а-яё]{2,15}$/.test(raw.trim())){
+      S.name=raw.trim();say('Приятно познакомиться, '+S.name+'!');resume();return}
+
+    // slot filling
+    if(S.booked&&(sv||dy!=null||tm||bookingIntent)){S.b={};b=S.b;S.booked=false;S.await=null}
+    var touched=false;
+    var ln=parseLen(t);if(ln){b.len=ln}
+    if(!sv&&catOf(t)==='color'&&!b.svc&&(bookingIntent||dy!=null||tm)){b.cat='color'}
+    if(sv&&sv!==b.svc){if(b.svc&&b.master&&SV[sv].m.indexOf(b.master)<0)b.master=null;b.svc=sv;touched=true}
+    if(mk){b.master=mk;touched=true}
+    if(dy!=null){b.day=dy;b.time=null;touched=true}
+    if(tm){b.time=null;S.req=tm;touched=true;if(b.day==null&&tm.h!=null){var today=slotsFor(0);b.day=(new Date().getHours()<tm.h)?0:1}}
+
+    if(S.await==='time'&&!touched){var m2=raw.match(/^(\d{1,2}):00$/);if(m2){S.req={h:+m2[1]};touched=true}}
+    if(S.await==='svc'&&!touched){var cc=catOf(t);if(cc){b.cat=cc;next();return}say('Не совсем поняла, какая услуга. Выберите раздел, пожалуйста:');b.cat=null;outChips=svcChips();return}
+    if(S.await==='master'&&!touched){say('Выберите мастера или нажмите «Любой мастер».');next();return}
+
+    if(touched||bookingIntent){if(S.moving&&!touched){next();return}S.booked=false;if(S.req&&b.day==null&&b.svc&&!dy)b.day=0;next();return}
+
+    if(/привет|здравств|добр(ый|ое|ого) |доброе утро|хай |салют/.test(t)){say(pick(['Здравствуйте! Чем могу помочь?','Добрый день! Подскажу и запишу, спрашивайте.']));resume();return}
+
+    say(pick(['Хороший вопрос, тут лучше ответит администратор. Передаю, он напишет в течение 10 минут.','Уточню это у администратора и вернусь с ответом в течение 10 минут.']));
+    if(S.await)resume();else{say('А пока могу записать вас или подсказать цены.');outChips=MAIN}
   }
 
   form.addEventListener('submit',function(e){e.preventDefault();var v=inp.value;inp.value='';user(v)});
-  document.getElementById('chat-reset').addEventListener('click',reset);
-  var ob=document.getElementById('open-demo'),body=document.getElementById('demo-body'),started=false;
-  ob.addEventListener('click',function(){
+  $('chat-reset').addEventListener('click',reset);
+  var ob=$('open-demo'),body=$('demo-body'),started=false;
+  if(ob)ob.addEventListener('click',function(){
     var open=body.hidden;body.hidden=!open;ob.setAttribute('aria-expanded',String(open));
     ob.classList.toggle('attn',!open);
     ob.querySelector('span').textContent=open?'Свернуть чат':'Тест от лица покупателя';
     if(open){if(!started){started=true;start()}body.scrollIntoView({behavior:'smooth',block:'start'})}
   });
+  window.__pogBot={user:user,reset:reset,start:start,get S(){return S}};
 })();
 </script>
 
