@@ -826,7 +826,7 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
   var AI_URL='https://david177.app.n8n.cloud/webhook/6891b9fe-5196-4015-a3aa-658af933397b/chat';            // адрес n8n Chat Trigger или Cloudflare Worker; пусто — сценарный бот
   var AI_MODE='n8n';        // 'n8n' — узел Chat Trigger в n8n, 'worker' — Cloudflare Worker
   var SESSION='web-'+Math.random().toString(36).slice(2)+Date.now().toString(36);
-  var hist=[],aiDown=false;
+  var hist=[],aiDown=false,aiFails=0;
   function slotsText(){
     var lines=[];
     for(var off=0;off<7;off++){
@@ -847,7 +847,7 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
         :{messages:hist,slots:slotsText(),today:dayNom(0)+', сейчас '+now()})})
     .then(function(r){return r.ok?r.text():Promise.reject(r.status)})
     .then(function(body){
-      clearTimeout(to);if(g!==gen)return;
+      clearTimeout(to);if(g!==gen)return;aiFails=0;
       var d;try{d=JSON.parse(body)}catch(e){d={output:body}}
       if(Array.isArray(d))d=d[0]||{};
       var txt=String(d.output||d.reply||d.text||d.response||d.message||'').trim();if(!txt)throw 'empty';
@@ -861,7 +861,7 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
     })
     .catch(function(){
       clearTimeout(to);if(g!==gen)return;ty.remove();st.textContent='онлайн';
-      hist.pop();aiDown=true;handle(raw);flush();
+      hist.pop();aiFails=(aiFails||0)+1;if(aiFails>=3)aiDown=true;try{console.warn('[POG] n8n недоступен, отвечает сценарный бот')}catch(e){}handle(raw);flush();
     });
   }
 
