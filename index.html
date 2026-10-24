@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B1426">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 26 26%27%3E%3Cpath d=%27M5 9.5 9 4h8l4 5.5L13 23Z%27 fill=%27%23E0BD66%27 stroke=%27%233E6AE0%27 stroke-width=%271.4%27/%3E%3C/svg%3E">
+<title>Point of Growth</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Point of Growth — ИИ-автоматизация для салонов, клиник, автосервисов и детейлинга: боты записи, напоминания, CRM.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column on a quiet ground; a single growth curve with its "point" is the only graphic. */
+:root{
+  --paper:#0B1426; --surface:#111D35; --ink:#EEF2FA; --muted:#97A3BC; --line:#22304D;
+  --accent:#D8B45C; --accent-soft:#1E2A44; --on-accent:#0B1426; --gold:#E0BD66; --blue:#3E6AE0;
+  color-scheme:dark;
+  --f-display:"Unbounded","Onest",system-ui,sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --s1:.5rem; --s2:1rem; --s3:1.5rem; --s4:2.5rem; --s5:4rem; --s6:6rem;
+}
+
+:root[data-pog="light"]{
+  --paper:#F4F6FA; --surface:#FFFFFF; --ink:#0F1B33; --muted:#5A6478; --line:#DCE1EA;
+  --accent:#1B3A8A; --accent-soft:#E7ECF8; --on-accent:#FFFFFF; --gold:#A07B22; --blue:#1B3A8A;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body,header,.svc,.row,.contact,.chip,.btn{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
+.theme{width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--gold);display:grid;place-items:center;cursor:pointer;padding:0;transition:transform .2s ease,border-color .2s ease}
+.theme:hover{border-color:var(--gold);transform:rotate(-12deg)}
+.theme svg{width:18px;height:18px}
+nav{align-items:center}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:1.0625rem;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.wrap{max-width:68rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (min-width:720px){.wrap{padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}}
+
+/* header */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);padding-block:.9rem}
+.logo{display:flex;align-items:center;gap:.6rem;text-decoration:none;font-family:var(--f-display);font-weight:500;font-size:.95rem;letter-spacing:-.01em}
+.logo svg{flex:none}
+nav{display:flex;gap:var(--s3);font-size:.92rem}
+nav a{text-decoration:none;color:var(--muted)}
+nav a:hover{color:var(--ink)}
+@media (max-width:640px){nav .hide-sm{display:none}}
+
+/* hero */
+.hero{padding-block:var(--s5) var(--s4)}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2.1rem,6vw,4.1rem);line-height:1.06;letter-spacing:-.035em;margin:var(--s2) 0 var(--s3);max-width:15ch;text-wrap:balance}
+h1 em{font-style:normal;color:var(--gold)}
+.lead{color:var(--muted);font-size:clamp(1.05rem,1.6vw,1.2rem);max-width:36rem;margin:0}
+.cta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:var(--s4)}
+.btn{display:inline-flex;align-items:center;gap:.6rem;padding:.85rem 1.3rem;border-radius:999px;font-weight:500;font-size:.98rem;text-decoration:none;border:1px solid var(--line);background:var(--surface);transition:transform .15s ease,border-color .15s ease}
+.btn:hover{transform:translateY(-1px);border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{border-color:var(--accent)}
+.btn svg{width:18px;height:18px;flex:none}
+
+.curve{margin-top:var(--s5);border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:relative}
+.curve svg{display:block;width:100%;height:auto;max-width:100%}
+.curve .axis{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.pulse{transform-origin:center;transform-box:fill-box;animation:pulse 2.6s ease-out infinite}
+@keyframes pulse{0%{opacity:.55;transform:scale(1)}100%{opacity:0;transform:scale(3.2)}}
+
+/* sections */
+section{padding-block:var(--s5)}
+.head{display:grid;gap:var(--s2);margin-bottom:var(--s4)}
+@media (min-width:860px){.head{grid-template-columns:1fr 1.4fr;align-items:end}}
+h2{font-family:var(--f-display);font-weight:400;font-size:clamp(1.6rem,3.4vw,2.4rem);letter-spacing:-.03em;line-height:1.12;margin:0;text-wrap:balance}
+.head p{margin:0;color:var(--muted);max-width:34rem}
+
+.services{display:grid;grid-template-columns:1fr;border-top:1px solid var(--line)}
+@media (min-width:720px){.services{grid-template-columns:1fr 1fr}}
+@media (min-width:1020px){.services{grid-template-columns:repeat(3,1fr)}}
+.svc{padding:var(--s3) var(--s3) var(--s4) 0;border-bottom:1px solid var(--line);display:grid;gap:.6rem;align-content:start;min-width:0}
+@media (min-width:720px){.svc{padding-right:var(--s4)}}
+.svc .tag{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.svc h3{font-size:1.15rem;font-weight:600;margin:0;letter-spacing:-.01em}
+.svc p{margin:0;color:var(--muted);font-size:.98rem}
+.svc ul{margin:.3rem 0 0;padding:0;list-style:none;display:grid;gap:.25rem;font-size:.92rem}
+.svc li{display:flex;gap:.5rem}
+.svc li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:.6em;flex:none}
+
+.niches{display:flex;flex-wrap:wrap;gap:.6rem}
+.chip{padding:.55rem 1rem;border:1px solid var(--line);border-radius:999px;font-size:.95rem;background:var(--surface)}
+.chip b{font-weight:500}
+.chip span{color:var(--muted)}
+
+.steps{display:grid;gap:0;counter-reset:s;border-left:1px solid var(--line);margin-left:6px}
+.step{position:relative;padding:0 0 var(--s4) var(--s4);min-width:0}
+.step:last-child{padding-bottom:0}
+.step::before{content:"";position:absolute;left:-7px;top:.35rem;width:13px;height:13px;border-radius:50%;background:var(--paper);border:2px solid var(--gold)}
+.step:last-child::before{background:var(--gold)}
+.step .t{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);letter-spacing:.06em}
+.step h3{margin:.2rem 0 .3rem;font-size:1.1rem;font-weight:600}
+.step p{margin:0;color:var(--muted);max-width:38rem}
+
+/* contact */
+.contact{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:var(--s4) var(--s3);display:grid;gap:var(--s4)}
+@media (min-width:860px){.contact{grid-template-columns:1.1fr 1fr;padding:var(--s5)}}
+.contact h2{max-width:14ch}
+.contact .note{color:var(--muted);margin:var(--s2) 0 0;max-width:30rem}
+.ch{display:grid;gap:.75rem;align-content:center}
+.row{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) 1.1rem;border:1px solid var(--line);border-radius:14px;background:var(--paper);min-width:0}
+.row .ico{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.row .ico svg{width:20px;height:20px}
+.row .txt{min-width:0;flex:1}
+.row .lbl{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.row .val{font-weight:600;font-size:1.08rem;user-select:all;overflow-wrap:anywhere}
+.row .acts{display:flex;gap:.4rem;flex:none}
+.mini{font:inherit;font-size:.85rem;padding:.45rem .8rem;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-decoration:none;white-space:nowrap}
+.mini:hover{border-color:var(--ink)}
+.mini.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+@media (max-width:460px){.row{flex-wrap:wrap}.row .acts{width:100%}.row .acts .mini{flex:1;text-align:center}}
+
+/* audit calculator */
+.audit{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:var(--s4) var(--s3);display:grid;gap:var(--s4)}
+@media (min-width:860px){.audit{padding:var(--s5)}}
+.audit-top{display:grid;gap:var(--s3)}
+@media (min-width:860px){.audit-top{grid-template-columns:1fr auto;align-items:end;gap:var(--s5)}}
+.audit-top h2{max-width:18ch;margin-top:var(--s2)}
+.audit-top p{color:var(--muted);margin:var(--s2) 0 0;max-width:34rem}
+.btn.open svg{width:20px;height:20px}
+.calc{display:grid;gap:var(--s4);border-top:1px solid var(--line);padding-top:var(--s4)}
+@media (min-width:960px){.calc{grid-template-columns:1.05fr 1fr;gap:var(--s5)}}
+.fields{display:grid;gap:var(--s2) var(--s3);grid-template-columns:1fr 1fr;align-content:start}
+@media (max-width:520px){.fields{grid-template-columns:1fr}}
+.f{display:grid;gap:.35rem;min-width:0}
+.f.full{grid-column:1/-1}
+.f label{font-size:.86rem;color:var(--muted)}
+.f input,.f select{font:inherit;width:100%;padding:.7rem .85rem;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.f input:focus,.f select:focus{border-color:var(--gold);outline:none}
+.res{display:grid;gap:var(--s3);align-content:start;min-width:0}
+.total{font-family:var(--f-display);font-weight:400;font-size:clamp(2.2rem,5.4vw,3.4rem);letter-spacing:-.04em;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums;margin-top:.4rem;overflow-wrap:anywhere}
+.year{color:var(--muted);margin-top:.5rem}
+.year b{color:var(--ink);font-weight:600}
+.lines{display:grid;gap:var(--s2)}
+.ln{display:grid;gap:.4rem}
+.ln-top{display:flex;justify-content:space-between;gap:var(--s2);font-size:.95rem}
+.ln-top span:last-child{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.track{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;background:var(--gold);border-radius:3px;transition:width .3s ease}
+.hours{font-size:.95rem;color:var(--muted)}
+.hours b{color:var(--ink)}
+.fine{font-size:.82rem;color:var(--muted);margin:0;line-height:1.5}
+
+footer{padding-block:var(--s4);color:var(--muted);font-size:.88rem}
+footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:.6rem 1rem;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<script>try{if(localStorage.getItem('pog-theme')==='light')document.documentElement.setAttribute('data-pog','light')}catch(e){}</script>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="#top" aria-label="Point of Growth">
+      <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true"><path d="M5 9.5 9 4h8l4 5.5L13 23Z" fill="var(--gold)"/><path d="M5 9.5h16M9 4l2.6 5.5L13 23M17 4l-2.6 5.5L13 23M11.6 9.5 13 4l1.4 5.5" fill="none" stroke="var(--paper)" stroke-width="1" stroke-linejoin="round" stroke-opacity=".75"/><path d="M5 9.5 9 4h8l4 5.5L13 23Z" fill="none" stroke="var(--blue)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      Point of Growth
+    </a>
+    <nav>
+      <a class="hide-sm" href="#services">Услуги</a>
+      <a href="#calc">Калькулятор</a>
+      <a class="hide-sm" href="#process">Как работаем</a>
+      <a href="#contact">Контакты</a>
+      <button class="theme" id="theme" type="button" aria-label="Включить светлую тему" title="Сменить тему">
+        <svg id="ic-moon" hidden viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a.6.6 0 0 0-.8-.7A9.5 9.5 0 1 0 21.2 15.4a.6.6 0 0 0-.7-.8Z"/></svg>
+        <svg id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div class="eyebrow">ИИ-автоматизация для малого и среднего бизнеса</div>
+    <h1>Найдём вашу <em>точку роста</em> и&nbsp;автоматизируем её</h1>
+    <p class="lead">Боты записи, напоминания клиентам, CRM и ИИ-ассистенты для салонов, клиник, автосервисов и детейлинга. Администратор тратит меньше времени на переписку, а клиенты реже пропускают запись.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://wa.me/79362364156?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9%20%D1%80%D0%B0%D0%B7%D0%B1%D0%BE%D1%80" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2Z"/></svg>
+        Бесплатный разбор в WhatsApp
+      </a>
+      <a class="btn" href="https://t.me/point_OFGrowth" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.6 3c.9-.3 1.6.2 1.3 1.3Z"/></svg>
+        Написать в Telegram
+      </a>
+    </div>
+
+    <div class="curve" aria-hidden="true">
+      <svg viewBox="0 0 1000 220" preserveAspectRatio="none" role="img">
+        <line x1="0" y1="190" x2="1000" y2="190" stroke="var(--line)" stroke-width="1"/>
+        <path d="M0 186 C 220 184, 420 178, 560 160 S 760 96, 820 62" fill="none" stroke="var(--blue)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        <path d="M820 62 C 860 40, 920 26, 1000 18" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="5 6" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <div style="position:absolute;left:82%;top:28.2%;transform:translate(-50%,-50%);width:14px;height:14px">
+        <span class="pulse" style="position:absolute;inset:0;border-radius:50%;background:var(--gold)"></span>
+        <span style="position:absolute;inset:0;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px var(--paper)"></span>
+      </div>
+      <div class="eyebrow" style="position:absolute;left:0;bottom:6px;font-size:.68rem">как сейчас: ручная запись, переписка, пропуски</div>
+      <div class="eyebrow" style="position:absolute;right:0;top:6px;font-size:.68rem;color:var(--gold)">после автоматизации</div>
+    </div>
+  </div>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="head">
+        <h2>Базовые услуги</h2>
+        <p>Начинаем с того, что быстрее всего освобождает время: запись, напоминания и ответы клиентам. Каждое решение подключаем к уже используемым инструментам.</p>
+      </div>
+      <div class="services">
+        <article class="svc">
+          <div class="tag">WhatsApp · Telegram</div>
+          <h3>Бот для записи и заявок</h3>
+          <p>Принимает запись круглосуточно, показывает свободное время и цены, отвечает на частые вопросы.</p>
+          <ul><li>Запись без звонка администратору</li><li>Передача сложных вопросов живому сотруднику</li></ul>
+        </article>
+        <article class="svc">
+          <div class="tag">Меньше неявок</div>
+          <h3>Напоминания и подтверждения</h3>
+          <p>Клиент получает сообщение за сутки и за пару часов, подтверждает или переносит запись в один клик.</p>
+          <ul><li>Освободившееся окно предлагается листу ожидания</li><li>Напоминание о следующем визите или ТО</li></ul>
+        </article>
+        <article class="svc">
+          <div class="tag">YCLIENTS · amoCRM · Битрикс24</div>
+          <h3>CRM и учёт клиентов</h3>
+          <p>Собираем клиентов, записи и заявки из всех каналов в одну базу, без таблиц и блокнотов.</p>
+          <ul><li>История визитов и покупок каждого клиента</li><li>Отчёт по загрузке и выручке</li></ul>
+        </article>
+        <article class="svc">
+          <div class="tag">ИИ-ассистент</div>
+          <h3>Ответы клиентам и на отзывы</h3>
+          <p>ИИ готовит ответы на сообщения и отзывы в Яндекс Картах и 2ГИС в тоне вашей компании.</p>
+          <ul><li>Быстрый ответ даже в нерабочее время</li><li>Сбор отзывов после визита</li></ul>
+        </article>
+        <article class="svc">
+          <div class="tag">Повторные визиты</div>
+          <h3>Возврат клиентов</h3>
+          <p>Автоматические сообщения тем, кто давно не приходил, с персональным поводом вернуться.</p>
+          <ul><li>Сегменты по услугам и давности визита</li><li>Поздравления и бонусы</li></ul>
+        </article>
+        <article class="svc">
+          <div class="tag">Сайт</div>
+          <h3>Сайт с онлайн-записью</h3>
+          <p>Простой быстрый сайт с услугами, ценами и кнопкой записи, связанный с ботом и CRM.</p>
+          <ul><li>Адаптивный, для телефона в первую очередь</li><li>Подключение карточки Яндекс Карт</li></ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <h2>С кем работаем</h2>
+        <p>Бизнесы, где клиенты записываются заранее, а администратор тонет в переписке.</p>
+      </div>
+      <div class="niches">
+        <div class="chip"><b>Салоны красоты</b> <span>и ногтевые студии</span></div>
+        <div class="chip"><b>Барбершопы</b></div>
+        <div class="chip"><b>Стоматологии</b> <span>и клиники</span></div>
+        <div class="chip"><b>Автосервисы</b></div>
+        <div class="chip"><b>Детейлинг</b></div>
+        <div class="chip"><b>Студии и школы</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="calc">
+    <div class="wrap">
+      <div class="audit">
+        <div class="audit-top">
+          <div>
+            <div class="eyebrow">Онлайн-калькулятор · ИИ-аудит</div>
+            <h2>Посчитайте, сколько вы сможете сэкономить</h2>
+            <p>Ответьте на несколько вопросов о своём бизнесе. Калькулятор покажет, сколько денег и часов в месяц возвращает автоматизация.</p>
+          </div>
+          <button class="btn primary open" id="open-calc" type="button" aria-expanded="false" aria-controls="calc-body">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 15.5h.01M12 15.5h.01M15.5 15.5h.01"/></svg>
+            <span>Калькулятор</span>
+          </button>
+        </div>
+
+        <div class="calc" id="calc-body" hidden>
+          <form class="fields" id="calc-form" autocomplete="off">
+            <div class="f full"><label for="c-niche">Сфера бизнеса</label>
+              <select id="c-niche">
+                <option value="beauty">Салон красоты, барбершоп, ногтевая студия</option>
+                <option value="dental">Стоматология, клиника</option>
+                <option value="auto">Автосервис</option>
+                <option value="detail">Детейлинг</option>
+                <option value="other">Другая сфера с записью</option>
+              </select></div>
+            <div class="f"><label for="c-visits">Записей в месяц</label><input id="c-visits" type="number" inputmode="numeric" min="0" step="1"></div>
+            <div class="f"><label for="c-check">Средний чек, ₽</label><input id="c-check" type="number" inputmode="numeric" min="0" step="100"></div>
+            <div class="f"><label for="c-noshow">Неявки сейчас, %</label><input id="c-noshow" type="number" inputmode="decimal" min="0" max="100" step="1"></div>
+            <div class="f"><label for="c-lost">Заявки без ответа (ночью, в загрузке), %</label><input id="c-lost" type="number" inputmode="decimal" min="0" max="100" step="1"></div>
+            <div class="f"><label for="c-min">Минут переписки и звонков на одну запись</label><input id="c-min" type="number" inputmode="numeric" min="0" step="1"></div>
+            <div class="f"><label for="c-rate">Стоимость часа администратора, ₽</label><input id="c-rate" type="number" inputmode="numeric" min="0" step="10"></div>
+            <p class="fine f full">Поля заполнены типовыми цифрами для выбранной сферы. Поставьте свои, и расчёт обновится сразу.</p>
+          </form>
+
+          <div class="res" aria-live="polite">
+            <div>
+              <div class="eyebrow">Можно сэкономить и вернуть в месяц</div>
+              <div class="total" id="r-total">0 ₽</div>
+              <div class="year">За год: <b id="r-year">0 ₽</b></div>
+            </div>
+            <div class="lines">
+              <div class="ln"><div class="ln-top"><span>Меньше неявок благодаря напоминаниям</span><span id="r-noshow">0 ₽</span></div><div class="track"><i id="b-noshow" style="width:0"></i></div></div>
+              <div class="ln"><div class="ln-top"><span>Заявки, которые бот подхватит 24/7</span><span id="r-lost">0 ₽</span></div><div class="track"><i id="b-lost" style="width:0"></i></div></div>
+              <div class="ln"><div class="ln-top"><span>Время администратора</span><span id="r-admin">0 ₽</span></div><div class="track"><i id="b-admin" style="width:0"></i></div></div>
+            </div>
+            <div class="hours">Администратор освободит примерно <b id="r-hours">0 ч</b> в месяц.</div>
+            <div class="cta" style="margin-top:0">
+              <a class="btn primary" id="r-wa" href="https://wa.me/79362364156" target="_blank" rel="noopener">Обсудить результат в WhatsApp</a>
+              <a class="btn" href="https://t.me/point_OFGrowth" target="_blank" rel="noopener">В Telegram</a>
+            </div>
+            <p class="fine">Это ориентир, а не обещание. Допущения: напоминания убирают около 40% неявок, бот спасает половину заявок, оставшихся без ответа, и берёт на себя 60% переписки. Точные цифры для вашего бизнеса назовём на бесплатном разборе.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="process">
+    <div class="wrap">
+      <div class="head">
+        <h2>Как работаем</h2>
+        <p>От первого разговора до работающей системы. Сроки зависят от задачи, точные называем после разбора.</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="t">30 минут · бесплатно</div><h3>Разбор</h3><p>Смотрим, как сейчас идёт запись и общение с клиентами, и находим, где теряется больше всего времени и денег.</p></div>
+        <div class="step"><div class="t">план и стоимость</div><h3>Предложение</h3><p>Описываем решение, сроки и фиксированную цену. Без абонентских плат за то, что вам не нужно.</p></div>
+        <div class="step"><div class="t">настройка</div><h3>Запуск</h3><p>Настраиваем, подключаем к вашим каналам и CRM, обучаем сотрудников.</p></div>
+        <div class="step"><div class="t">после запуска</div><h3>Поддержка и рост</h3><p>Следим за работой, правим сценарии и добавляем новые автоматизации, когда бизнес к ним готов.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap">
+      <div class="contact">
+        <div>
+          <div class="eyebrow">Контакты</div>
+          <h2 style="margin-top:var(--s2)">Запишитесь на бесплатный разбор</h2>
+          <p class="note">Напишите, чем занимается ваш бизнес и что отнимает больше всего времени. Ответим в течение дня.</p>
+        </div>
+        <div class="ch">
+          <div class="row">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Z"/></svg></div>
+            <div class="txt"><div class="lbl">WhatsApp</div><div class="val" id="wa">8 936 236-41-56</div></div>
+            <div class="acts">
+              <button class="mini" type="button" data-copy="89362364156">Копировать</button>
+              <a class="mini go" href="https://wa.me/79362364156" target="_blank" rel="noopener">Написать</a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.6 3c.9-.3 1.6.2 1.3 1.3Z"/></svg></div>
+            <div class="txt"><div class="lbl">Telegram</div><div class="val" id="tg">@point_OFGrowth</div></div>
+            <div class="acts">
+              <button class="mini" type="button" data-copy="@point_OFGrowth">Копировать</button>
+              <a class="mini go" href="https://t.me/point_OFGrowth" target="_blank" rel="noopener">Написать</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap bar">
+    <span>© 2026 Point of Growth</span>
+    <span>ИИ-автоматизация для малого и среднего бизнеса</span>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var t=document.getElementById('toast'),h;
+  function show(m){t.textContent=m;t.classList.add('on');clearTimeout(h);h=setTimeout(function(){t.classList.remove('on')},1600)}
+  var root=document.documentElement,tb=document.getElementById('theme'),moon=document.getElementById('ic-moon'),sun=document.getElementById('ic-sun');
+  function paint(){var l=root.getAttribute('data-pog')==='light';moon.hidden=!l;sun.hidden=l;tb.setAttribute('aria-label',l?'Включить тёмную тему':'Включить светлую тему')}
+  tb.addEventListener('click',function(){var l=root.getAttribute('data-pog')==='light';if(l)root.removeAttribute('data-pog');else root.setAttribute('data-pog','light');try{localStorage.setItem('pog-theme',l?'dark':'light')}catch(e){}paint()});
+  paint();
+  var ob=document.getElementById('open-calc'),body=document.getElementById('calc-body');
+  var P={beauty:[300,2500,10,8,5,300],dental:[250,6000,12,6,7,400],auto:[150,9000,8,10,10,400],detail:[60,15000,7,12,15,400],other:[200,3000,10,8,6,350]};
+  var ids=['c-visits','c-check','c-noshow','c-lost','c-min','c-rate'],els=ids.map(function(i){return document.getElementById(i)}),niche=document.getElementById('c-niche');
+  function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
+  function num(e){var v=parseFloat(String(e.value).replace(',','.'));return isFinite(v)&&v>0?v:0}
+  function fill(k){P[k].forEach(function(v,i){els[i].value=v});calc()}
+  function calc(){
+    var v=num(els[0]),c=num(els[1]),ns=Math.min(num(els[2]),100)/100,lo=Math.min(num(els[3]),100)/100,m=num(els[4]),r=num(els[5]);
+    var a=v*ns*0.4*c, b=v*lo*0.5*c, hrs=v*m*0.6/60, d=hrs*r, tot=a+b+d, mx=Math.max(a,b,d,1);
+    document.getElementById('r-total').textContent=rub(tot);
+    document.getElementById('r-year').textContent=rub(tot*12);
+    document.getElementById('r-noshow').textContent=rub(a);
+    document.getElementById('r-lost').textContent=rub(b);
+    document.getElementById('r-admin').textContent=rub(d);
+    document.getElementById('r-hours').textContent=Math.round(hrs)+' ч';
+    document.getElementById('b-noshow').style.width=(a/mx*100)+'%';
+    document.getElementById('b-lost').style.width=(b/mx*100)+'%';
+    document.getElementById('b-admin').style.width=(d/mx*100)+'%';
+    var msg='Здравствуйте! Калькулятор на сайте показал экономию '+rub(tot)+' в месяц ('+niche.options[niche.selectedIndex].text+', '+Math.round(v)+' записей). Хочу бесплатный разбор.';
+    document.getElementById('r-wa').href='https://wa.me/79362364156?text='+encodeURIComponent(msg);
+  }
+  niche.addEventListener('change',function(){fill(niche.value)});
+  els.forEach(function(e){e.addEventListener('input',calc)});
+  document.getElementById('calc-form').addEventListener('submit',function(e){e.preventDefault()});
+  fill('beauty');
+  ob.addEventListener('click',function(){
+    var open=body.hidden;body.hidden=!open;ob.setAttribute('aria-expanded',String(open));
+    ob.querySelector('span').textContent=open?'Свернуть':'Калькулятор';
+    if(open){body.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){niche.focus({preventScroll:true})},350)}
+  });
+  document.querySelectorAll('[data-copy]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var v=b.getAttribute('data-copy');
+      var sel=function(){var el=b.closest('.row').querySelector('.val');var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);show('Выделено, нажмите Ctrl+C')};
+      try{navigator.clipboard.writeText(v).then(function(){show('Скопировано: '+v)},sel)}catch(e){sel()}
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
