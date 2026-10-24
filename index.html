@@ -29,6 +29,9 @@
   color-scheme:light;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+nav a{white-space:nowrap}
+#demo-body,#calc-body,section{scroll-margin-top:80px}
 body,header,.svc,.row,.contact,.chip,.btn{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
 .theme{width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--gold);display:grid;place-items:center;cursor:pointer;padding:0;transition:transform .2s ease,border-color .2s ease}
 .theme:hover{border-color:var(--gold);transform:rotate(-12deg)}
@@ -123,6 +126,53 @@ h2{font-family:var(--f-display);font-weight:400;font-size:clamp(1.6rem,3.4vw,2.4
 .mini.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 @media (max-width:460px){.row{flex-wrap:wrap}.row .acts{width:100%}.row .acts .mini{flex:1;text-align:center}}
 
+/* demo bot */
+.demo{display:grid;gap:var(--s4);align-items:center}
+@media (min-width:900px){.demo{grid-template-columns:1fr 1.05fr;gap:var(--s5)}}
+.demo-copy{min-width:0}
+.demo-copy h2{margin-top:var(--s2)}
+.demo-copy>p{color:var(--muted);margin:var(--s2) 0 0;max-width:32rem}
+.demo-list{margin:var(--s3) 0;padding:0;list-style:none;display:grid;gap:.45rem}
+.demo-list li{display:flex;gap:.6rem}
+.demo-list li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:.65em;flex:none}
+.chat{background:var(--surface);border:1px solid var(--line);border-radius:20px;display:flex;flex-direction:column;height:560px;max-height:82vh;overflow:hidden;min-width:0}
+.chat-head{display:flex;align-items:center;gap:.75rem;padding:.9rem 1.1rem;border-bottom:1px solid var(--line)}
+.ava{width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--gold);display:grid;place-items:center;font-weight:600;flex:none}
+.chat-name{font-weight:600;font-size:.98rem;line-height:1.2}
+.chat-st{font-size:.8rem;color:var(--muted)}
+.chat-reset{margin-left:auto;font:inherit;font-size:.82rem;color:var(--muted);background:none;border:1px solid var(--line);border-radius:999px;padding:.35rem .75rem;cursor:pointer}
+.chat-reset:hover{color:var(--ink);border-color:var(--ink)}
+.chat-log{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.5rem;background:var(--paper)}
+.msg{max-width:84%;padding:.6rem .85rem;border-radius:16px;font-size:.95rem;line-height:1.45;white-space:pre-line;overflow-wrap:anywhere;animation:pop .2s ease}
+.msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-bottom-right-radius:5px}
+.msg.note{align-self:center;max-width:100%;text-align:center;color:var(--muted);font-size:.8rem;padding:.2rem .4rem}
+.msg.remind{border:1px solid var(--gold)}
+.msg time{display:block;font-size:.7rem;opacity:.6;margin-top:.2rem;text-align:right}
+.typing{align-self:flex-start;display:flex;gap:4px;padding:.75rem .9rem;background:var(--surface);border:1px solid var(--line);border-radius:16px;border-bottom-left-radius:5px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}
+.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+@keyframes pop{from{transform:translateY(4px);opacity:.4}to{transform:none;opacity:1}}
+.chat-quick{display:flex;flex-wrap:wrap;gap:.4rem;padding:.6rem 1rem;background:var(--paper);border-top:1px solid var(--line)}
+.chat-quick:empty{display:none}
+.chat-quick button,.chat-quick a{font:inherit;font-size:.88rem;padding:.45rem .85rem;border-radius:999px;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;text-decoration:none}
+.chat-quick button:hover,.chat-quick a:hover{background:var(--gold);color:var(--on-accent)}
+.chat-in{display:flex;gap:.5rem;padding:.75rem;border-top:1px solid var(--line);background:var(--surface)}
+.chat-in input{flex:1;min-width:0;font:inherit;font-size:1rem;padding:.65rem .9rem;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.chat-in input:focus{outline:none;border-color:var(--gold)}
+.chat-in button{width:42px;height:42px;flex:none;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;cursor:pointer}
+.chat-in button svg{width:18px;height:18px}
+
+.demo-sec{padding-block:var(--s2) var(--s4)}
+.demo-box{border-color:var(--gold)}
+.demo-body{display:grid;gap:var(--s2);border-top:1px solid var(--line);padding-top:var(--s4)}
+.demo-body .chat{width:100%;max-width:640px;margin:0 auto}
+.demo-body .fine{text-align:center;max-width:640px;margin:0 auto}
+.btn.attn{font-size:1.05rem;padding:1rem 1.6rem;animation:ring 2.4s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--gold) 55%,transparent)}70%{box-shadow:0 0 0 16px color-mix(in srgb,var(--gold) 0%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
+@media (max-width:520px){.logo-t{display:none}nav{gap:1rem}}
 /* audit calculator */
 .audit{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:var(--s4) var(--s3);display:grid;gap:var(--s4)}
 @media (min-width:860px){.audit{padding:var(--s5)}}
@@ -168,10 +218,11 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
   <div class="wrap bar">
     <a class="logo" href="#top" aria-label="Point of Growth">
       <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true"><path d="M5 9.5 9 4h8l4 5.5L13 23Z" fill="var(--gold)"/><path d="M5 9.5h16M9 4l2.6 5.5L13 23M17 4l-2.6 5.5L13 23M11.6 9.5 13 4l1.4 5.5" fill="none" stroke="var(--paper)" stroke-width="1" stroke-linejoin="round" stroke-opacity=".75"/><path d="M5 9.5 9 4h8l4 5.5L13 23Z" fill="none" stroke="var(--blue)" stroke-width="1.2" stroke-linejoin="round"/></svg>
-      Point of Growth
+      <span class="logo-t">Point of Growth</span>
     </a>
     <nav>
       <a class="hide-sm" href="#services">Услуги</a>
+      <a href="#demo">Тест бота</a>
       <a href="#calc">Калькулятор</a>
       <a class="hide-sm" href="#process">Как работаем</a>
       <a href="#contact">Контакты</a>
@@ -213,6 +264,40 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
       <div class="eyebrow" style="position:absolute;right:0;top:6px;font-size:.68rem;color:var(--gold)">после автоматизации</div>
     </div>
   </div>
+
+  <section id="demo" class="demo-sec">
+    <div class="wrap">
+      <div class="audit demo-box">
+        <div class="audit-top">
+          <div>
+            <div class="eyebrow">Демо · бот записи</div>
+            <h2>Проверьте бота от лица клиента</h2>
+            <p>Запишитесь в вымышленную студию, спросите цены своими словами и посмотрите, как приходит напоминание. Займёт одну минуту.</p>
+          </div>
+          <button class="btn primary open attn" id="open-demo" type="button" aria-expanded="false" aria-controls="demo-body">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12Z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>
+            <span>Тест от лица покупателя</span>
+          </button>
+        </div>
+        <div class="demo-body" id="demo-body" hidden>
+          <div class="chat" aria-label="Демо-чат с ботом">
+            <div class="chat-head">
+              <div class="ava" aria-hidden="true">Л</div>
+              <div><div class="chat-name">Студия «Лаванда»</div><div class="chat-st" id="chat-st">онлайн</div></div>
+              <button class="chat-reset" id="chat-reset" type="button">Заново</button>
+            </div>
+            <div class="chat-log" id="chat-log" role="log" aria-live="polite"></div>
+            <div class="chat-quick" id="chat-quick"></div>
+            <form class="chat-in" id="chat-form" autocomplete="off">
+              <input id="chat-text" type="text" placeholder="Напишите сообщение…" aria-label="Сообщение">
+              <button type="submit" aria-label="Отправить"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.3 10l12.6 2-12.6 2z"/></svg></button>
+            </form>
+          </div>
+          <p class="fine">Это демонстрация: студия «Лаванда» вымышленная, запись никуда не отправляется. Так же бот будет работать в WhatsApp или Telegram вашего бизнеса.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="services">
     <div class="wrap">
@@ -433,6 +518,144 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
       var sel=function(){var el=b.closest('.row').querySelector('.val');var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);show('Выделено, нажмите Ctrl+C')};
       try{navigator.clipboard.writeText(v).then(function(){show('Скопировано: '+v)},sel)}catch(e){sel()}
     });
+  });
+})();
+</script>
+<script>
+(function(){
+  var log=document.getElementById('chat-log'),quick=document.getElementById('chat-quick'),
+      form=document.getElementById('chat-form'),inp=document.getElementById('chat-text'),
+      st=document.getElementById('chat-st');
+  if(!log)return;
+  var SERV={'Стрижка':'1 500','Маникюр с покрытием':'1 800','Окрашивание':'4 500'};
+  var MASTERS=['Анна','Мария','Любой свободный'];
+  var SLOTS=['11:00','14:30','18:00'];
+  var MAIN=['Записаться','Цены','Адрес и часы работы'];
+  var END=['Хочу такого бота','Начать заново'];
+  var WA='https://wa.me/79362364156?text='+encodeURIComponent('Здравствуйте! Попробовал демо-бота на сайте, хочу такого для своего бизнеса.');
+  var S={},gen=0;
+
+  function days(){
+    var out=['Сегодня','Завтра'],d=new Date();d.setDate(d.getDate()+2);
+    var s=d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'});
+    out.push(s.charAt(0).toUpperCase()+s.slice(1));return out;
+  }
+  function low(s){return s.charAt(0).toLowerCase()+s.slice(1)}
+  function now(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+  function scroll(){log.scrollTop=log.scrollHeight}
+  function add(text,cls){
+    var m=document.createElement('div');m.className='msg '+cls;m.textContent=text;
+    if(cls.indexOf('note')<0){var t=document.createElement('time');t.textContent=now();m.appendChild(t)}
+    log.appendChild(m);scroll();
+  }
+  function chips(list){
+    quick.innerHTML='';
+    (list||[]).forEach(function(l){
+      var b;
+      if(l==='Хочу такого бота'){b=document.createElement('a');b.href=WA;b.target='_blank';b.rel='noopener';b.textContent='Хочу такого бота';}
+      else{b=document.createElement('button');b.type='button';b.textContent=l;b.addEventListener('click',function(){user(l)});}
+      quick.appendChild(b);
+    });
+  }
+  function say(lines,ch){
+    var g=gen,i=0;chips([]);
+    (function step(){
+      if(g!==gen)return;
+      if(i>=lines.length){chips(ch);return}
+      var L=lines[i++],o=typeof L==='string'?{t:L}:L;
+      var ty=document.createElement('div');ty.className='typing';ty.innerHTML='<i></i><i></i><i></i>';
+      log.appendChild(ty);scroll();st.textContent='печатает…';
+      setTimeout(function(){
+        if(g!==gen)return;
+        ty.remove();st.textContent='онлайн';add(o.t,o.cls||'bot');
+        setTimeout(step,o.wait||250);
+      },Math.min(1400,450+o.t.length*10));
+    })();
+  }
+
+  function start(){S={step:'idle'};say(['Здравствуйте! Я бот-администратор студии «Лаванда».','Помогу записаться, подскажу цены и адрес. Нажмите кнопку или напишите своими словами.'],MAIN)}
+  function book(){S.step='service';say(['С удовольствием запишу вас. Какая услуга интересует?'],Object.keys(SERV))}
+  function pickService(s){S.service=s;S.step='master';say(['Отлично, '+low(s)+'. К какому мастеру записать?'],MASTERS)}
+  function pickMaster(m){S.master=m;S.step='day';say(['Хорошо. На какой день?'],days())}
+  function pickDay(d){S.day=d;S.step='time';say(['На '+low(d)+' свободно такое время:'],SLOTS)}
+  function masterText(){return S.master==='Любой свободный'?'любой свободный мастер':'мастер '+S.master}
+  function pickTime(t){
+    S.time=t;
+    if(S.moving){S.moving=false;S.step='booked';
+      say(['Готово, перенёс запись на '+low(S.day)+', '+t+'. Напомню накануне.',{t:'Конец демо. Так бот работает с каждым клиентом круглосуточно.',cls:'note'}],END);return}
+    S.step='name';say(['Записываю на '+t+'. Как к вам обращаться?'],[]);
+    setTimeout(function(){try{inp.focus({preventScroll:true})}catch(e){}},1200);
+  }
+  function setName(n){
+    S.name=n.slice(0,40);S.step='remind';
+    say(['Спасибо, '+S.name+'! Вы записаны:\n'+S.service+', '+masterText()+'\n'+S.day+', '+S.time+'\nСтоимость: от '+SERV[S.service]+' ₽',
+         'Накануне пришлю напоминание. Если планы поменяются, просто напишите, и я перенесу запись.',
+         {t:'Так выглядит напоминание за сутки до визита:',cls:'note',wait:900},
+         {t:'Напоминание: '+low(S.day==='Сегодня'?'сегодня':'завтра')+' в '+S.time+' вас ждёт '+low(S.service)+' в студии «Лаванда». Подтвердите, пожалуйста, визит.',cls:'bot remind'}],
+        ['Подтверждаю','Перенести','Отменить']);
+  }
+  function confirmVisit(){S.step='booked';say(['Отлично, ждём вас! Если будете опаздывать, напишите, я предупрежу мастера.',{t:'Конец демо. Так бот работает с каждым клиентом круглосуточно.',cls:'note'}],END)}
+  function move(){S.moving=true;S.step='day';say(['Без проблем. На какой день перенести?'],days())}
+  function cancel(){S.step='idle';S.time=null;say(['Запись отменена. Освободившееся время я уже предложил клиентам из листа ожидания.','Будем рады видеть вас снова!',{t:'Конец демо. Так бот работает с каждым клиентом круглосуточно.',cls:'note'}],END)}
+  function prices(){say(['Наши цены:\nСтрижка — от 1 500 ₽\nМаникюр с покрытием — от 1 800 ₽\nОкрашивание — от 4 500 ₽','Записать вас?'],['Записаться','Адрес и часы работы'])}
+  function address(){say(['Мы на ул. Примерной, 1, вход со двора. Работаем каждый день с 10:00 до 21:00.','Записать вас на удобное время?'],['Записаться','Цены'])}
+  function reset(){gen++;log.innerHTML='';quick.innerHTML='';st.textContent='онлайн';start()}
+
+  function user(text){
+    text=String(text).trim();if(!text)return;
+    add(text,'me');chips([]);
+    var t=text.toLowerCase();
+    if(text==='Начать заново')return reset();
+    if(text==='Записаться')return book();
+    if(text==='Цены')return prices();
+    if(text==='Адрес и часы работы')return address();
+    if(text==='Подтверждаю')return confirmVisit();
+    if(text==='Перенести')return move();
+    if(text==='Отменить')return cancel();
+    if(S.step==='service'){
+      if(SERV[text])return pickService(text);
+      if(/стриж/.test(t))return pickService('Стрижка');
+      if(/маник|ногт/.test(t))return pickService('Маникюр с покрытием');
+      if(/окраш|цвет|покрас/.test(t))return pickService('Окрашивание');
+    }
+    if(S.step==='master'){
+      if(MASTERS.indexOf(text)>=0)return pickMaster(text);
+      if(/ан/.test(t))return pickMaster('Анна');
+      if(/мар/.test(t))return pickMaster('Мария');
+      if(/люб|все равно|всё равно|неваж/.test(t))return pickMaster('Любой свободный');
+    }
+    if(S.step==='day'){
+      var ds=days();if(ds.indexOf(text)>=0)return pickDay(text);
+      if(/сегодн/.test(t))return pickDay('Сегодня');
+      if(/завтр/.test(t))return pickDay('Завтра');
+      if(/послезавтр/.test(t))return pickDay(ds[2]);
+    }
+    if(S.step==='time'){
+      if(SLOTS.indexOf(text)>=0)return pickTime(text);
+      var m=t.match(/(\d{1,2})[:.\s]?(\d{2})?/);
+      if(m){var h=+m[1];var best=SLOTS.reduce(function(a,b){return Math.abs(parseInt(b)-h)<Math.abs(parseInt(a)-h)?b:a});
+        if(SLOTS.indexOf(text)<0&&parseInt(best)!==h){say(['На это время, к сожалению, всё занято. Ближайшее свободное — '+best+'. Подойдёт?'],SLOTS);return}
+        return pickTime(best)}
+    }
+    if(S.step==='name'&&!/цен|стоим|адрес|где/.test(t))return setName(text);
+    if(/цен|стоим|сколько|прайс|почём|почем/.test(t))return prices();
+    if(/адрес|где|наход|добрат|часы|работа[ею]т|открыт|до скольк/.test(t))return address();
+    if(/перен/.test(t)&&S.time)return move();
+    if(/отмен/.test(t)&&S.time)return cancel();
+    if(/запис|хочу|можно|свобод|окошк/.test(t))return book();
+    if(/привет|здравств|добр(ый|ое|ого)/.test(t))return say(['Здравствуйте! Чем могу помочь?'],MAIN);
+    if(/спасиб|благодар/.test(t))return say(['Пожалуйста! Обращайтесь в любое время.'],MAIN);
+    say(['Хороший вопрос. Передам его администратору, он ответит в течение 10 минут.','А пока могу записать вас или подсказать цены.'],MAIN);
+  }
+
+  form.addEventListener('submit',function(e){e.preventDefault();var v=inp.value;inp.value='';user(v)});
+  document.getElementById('chat-reset').addEventListener('click',reset);
+  var ob=document.getElementById('open-demo'),body=document.getElementById('demo-body'),started=false;
+  ob.addEventListener('click',function(){
+    var open=body.hidden;body.hidden=!open;ob.setAttribute('aria-expanded',String(open));
+    ob.classList.toggle('attn',!open);
+    ob.querySelector('span').textContent=open?'Свернуть чат':'Тест от лица покупателя';
+    if(open){if(!started){started=true;start()}body.scrollIntoView({behavior:'smooth',block:'start'})}
   });
 })();
 </script>
