@@ -35,7 +35,12 @@ nav a{white-space:nowrap}
 body,header,.svc,.row,.contact,.chip,.btn{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
 .theme{width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--gold);display:grid;place-items:center;cursor:pointer;padding:0;transition:transform .2s ease,border-color .2s ease}
 .theme:hover{border-color:var(--gold);transform:rotate(-12deg)}
-.theme svg{width:18px;height:18px}
+.theme{position:relative;overflow:hidden}
+.theme svg{width:18px;height:18px;position:absolute;inset:0;margin:auto;transition:transform .55s cubic-bezier(.34,1.56,.64,1),opacity .35s ease}
+#ic-sun{opacity:1;transform:rotate(0) scale(1)}
+#ic-moon{opacity:0;transform:rotate(-120deg) scale(.3)}
+:root[data-pog="light"] #ic-sun{opacity:0;transform:rotate(120deg) scale(.3)}
+:root[data-pog="light"] #ic-moon{opacity:1;transform:rotate(0) scale(1)}
 nav{align-items:center}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
@@ -212,6 +217,7 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
 </head>
 <body>
 
+
 <script>try{if(localStorage.getItem('pog-theme')==='light')document.documentElement.setAttribute('data-pog','light')}catch(e){}</script>
 
 <header>
@@ -227,7 +233,7 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
       <a class="hide-sm" href="#process">Как работаем</a>
       <a href="#contact">Контакты</a>
       <button class="theme" id="theme" type="button" aria-label="Включить светлую тему" title="Сменить тему">
-        <svg id="ic-moon" hidden viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a.6.6 0 0 0-.8-.7A9.5 9.5 0 1 0 21.2 15.4a.6.6 0 0 0-.7-.8Z"/></svg>
+        <svg id="ic-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a.6.6 0 0 0-.8-.7A9.5 9.5 0 1 0 21.2 15.4a.6.6 0 0 0-.7-.8Z"/></svg>
         <svg id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>
       </button>
     </nav>
@@ -479,7 +485,7 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
   var t=document.getElementById('toast'),h;
   function show(m){t.textContent=m;t.classList.add('on');clearTimeout(h);h=setTimeout(function(){t.classList.remove('on')},1600)}
   var root=document.documentElement,tb=document.getElementById('theme'),moon=document.getElementById('ic-moon'),sun=document.getElementById('ic-sun');
-  function paint(){var l=root.getAttribute('data-pog')==='light';moon.hidden=!l;sun.hidden=l;tb.setAttribute('aria-label',l?'Включить тёмную тему':'Включить светлую тему')}
+  function paint(){var l=root.getAttribute('data-pog')==='light';tb.setAttribute('aria-label',l?'Включить тёмную тему':'Включить светлую тему')}
   tb.addEventListener('click',function(){var l=root.getAttribute('data-pog')==='light';if(l)root.removeAttribute('data-pog');else root.setAttribute('data-pog','light');try{localStorage.setItem('pog-theme',l?'dark':'light')}catch(e){}paint()});
   paint();
   var ob=document.getElementById('open-calc'),body=document.getElementById('calc-body');
