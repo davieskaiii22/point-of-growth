@@ -816,18 +816,64 @@ footer .bar{border-top:1px solid var(--line);flex-wrap:wrap}
     {k:'bye',re:/до свидан|пока |всего доброго/,a:function(){return 'Всего доброго! Будем рады вас видеть.'}}
   ];
 
+  /* ---------- AI mode ---------- */
+  var AI_URL='https://david177.app.n8n.cloud/webhook/6891b9fe-5196-4015-a3aa-658af933397b/chat';            // адрес n8n Chat Trigger или Cloudflare Worker; пусто — сценарный бот
+  var AI_MODE='n8n';        // 'n8n' — узел Chat Trigger в n8n, 'worker' — Cloudflare Worker
+  var SESSION='web-'+Math.random().toString(36).slice(2)+Date.now().toString(36);
+  var hist=[],aiDown=false;
+  function slotsText(){
+    var lines=[];
+    for(var off=0;off<7;off++){
+      var parts=Object.keys(M).map(function(k){var f=free(off,k);return f.length?M[k].n+': '+f.join(', '):''}).filter(Boolean);
+      lines.push(dayNom(off)+' — '+(parts.length?parts.join('; '):'всё занято'));
+    }
+    return lines.join('\n');
+  }
+  function aiTurn(raw){
+    hist.push({role:'user',content:raw});
+    var g=gen;chips([]);
+    var ty=document.createElement('div');ty.className='typing';ty.innerHTML='<i></i><i></i><i></i>';
+    log.appendChild(ty);scroll();st.textContent='печатает…';
+    var ctl=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort()},25000);
+    fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl?ctl.signal:undefined,
+      body:JSON.stringify(AI_MODE==='n8n'
+        ?{action:'sendMessage',sessionId:SESSION,chatInput:raw}
+        :{messages:hist,slots:slotsText(),today:dayNom(0)+', сейчас '+now()})})
+    .then(function(r){return r.ok?r.text():Promise.reject(r.status)})
+    .then(function(body){
+      clearTimeout(to);if(g!==gen)return;
+      var d;try{d=JSON.parse(body)}catch(e){d={output:body}}
+      if(Array.isArray(d))d=d[0]||{};
+      var txt=String(d.output||d.reply||d.text||d.response||d.message||'').trim();if(!txt)throw 'empty';
+      var m=txt.match(/##BOOKING\|([^\n]*)/);txt=txt.replace(/\n?##BOOKING[^\n]*/g,'').trim();
+      hist.push({role:'assistant',content:txt+(m?'\n##BOOKING|'+m[1]:'')});
+      ty.remove();st.textContent='онлайн';add(txt,'bot');
+      if(m){var f=m[1].split('|');
+        setTimeout(function(){if(g!==gen)return;add('Так выглядит напоминание за сутки до визита:','note');
+          add('Напоминание: '+(f[2]?f[2]+' ':'')+'в '+(f[3]||'')+' вас ждёт '+(f[1]||'мастер')+(f[0]?', '+f[0].toLowerCase():'')+'. Подтвердите, пожалуйста, визит.','bot remind');
+          chips(['Подтверждаю','Перенести','Отменить запись','Хочу такого бота'])},900)}
+    })
+    .catch(function(){
+      clearTimeout(to);if(g!==gen)return;ty.remove();st.textContent='онлайн';
+      hist.pop();aiDown=true;handle(raw);flush();
+    });
+  }
+
   /* ---------- main handler ---------- */
   function start(){
     S={b:{},await:null,name:null,booked:false};
     say('Здравствуйте! Я ИИ-ассистент студии красоты «Лаванда».');
     say('Запишу на любую услугу, подскажу цены и помогу выбрать окрашивание. Пишите как удобно, например: «балаяж на длинные волосы в субботу».');
-    outChips=MAIN;flush();
+    outChips=AI_URL&&!aiDown?['Хочу записаться','Какое окрашивание мне подойдёт?','Сколько стоит маникюр?','Где вы находитесь?']:MAIN;
+    hist=[{role:'assistant',content:'Здравствуйте! Я ИИ-ассистент студии красоты «Лаванда». Запишу на любую услугу, подскажу цены и помогу выбрать окрашивание.'}];
+    flush();
   }
-  function reset(){gen++;log.innerHTML='';quick.innerHTML='';st.textContent='онлайн';out=[];start()}
+  function reset(){gen++;log.innerHTML='';quick.innerHTML='';st.textContent='онлайн';out=[];hist=[];SESSION='web-'+Math.random().toString(36).slice(2)+Date.now().toString(36);start()}
 
   function user(raw){
     raw=String(raw).trim();if(!raw)return;
     add(raw,'me');chips([]);
+    if(AI_URL&&!aiDown&&raw!=='Начать заново'){aiTurn(raw);return}
     handle(raw);flush();
   }
   function resume(){
